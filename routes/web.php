@@ -19,6 +19,7 @@ use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DemoController;
 use App\Http\Controllers\DeployController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentMethodController;
@@ -58,7 +59,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::redirect('/', '/dashboard');
+Route::redirect('/', '/login');
 
 // PWA: nombre y logo salen de la empresa registrada (tabla companies)
 Route::get('/manifest.webmanifest', [PwaController::class, 'manifest'])->name('pwa.manifest');
@@ -74,6 +75,11 @@ Route::middleware(['signed'])->prefix('recibo')->name('public.receipts.')->group
     Route::get('/consignacion/{consignment}', [PublicReceiptController::class, 'consignment'])->name('consignment');
     Route::get('/compra/{purchase}', [PublicReceiptController::class, 'purchase'])->name('purchase');
 });
+
+// Modo demostración: botón del login que restablece la base (migrate:fresh --seed). Solo con DEMO_MODE=true.
+Route::post('/demo/restablecer', [DemoController::class, 'reset'])
+    ->middleware(['guest', 'throttle:3,10'])
+    ->name('demo.reset');
 
 Route::controller(AuthController::class)->group(function () {
     Route::get('/registrar', 'create')->name('auth.create');

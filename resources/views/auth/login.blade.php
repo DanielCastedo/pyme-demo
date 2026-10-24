@@ -1,89 +1,101 @@
 <x-authentication-layout>
 
-    <!-- Encabezado -->
-    <div class="text-center mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Iniciar sesión</h1>
+    <p class="mt-1 mb-6 text-sm text-gray-500 dark:text-gray-400">Ingresa con tu correo y contraseña.</p>
 
-        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
-            Bienvenido a <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-emerald-700">Login</span>
-        </h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Ingresa tus credenciales para acceder a tu cuenta</p>
-    </div>
-
-    <!-- Alerta de Estado -->
     @if (session('status'))
-        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-300 font-medium text-sm text-center shadow-sm">
+        <div class="mb-4 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-300 text-sm">
             {{ session('status') }}
         </div>
     @endif
 
-    <!-- Errores de Validación -->
-    <x-validation-errors class="mb-6" />
+    <x-validation-errors class="mb-4" />
 
-    <!-- Formulario -->
-    <form method="POST" action="{{ route('login') }}" class="space-y-5">
+    <form id="login-form" method="POST" action="{{ route('login') }}" class="space-y-4">
         @csrf
 
-        <!-- Correo -->
         <div>
-            <label for="email" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Correo Electrónico</label>
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                    </svg>
-                </div>
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="ejemplo@correo.com"
-                    class="block w-full pl-11 py-3 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-500 transition-shadow shadow-sm">
-            </div>
+            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correo electrónico</label>
+            <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
+                class="form-input block w-full px-3 py-2 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-600 focus:ring-emerald-600">
         </div>
 
-        <!-- Contraseña -->
         <div>
-            <label for="password" class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Contraseña</label>
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
-                <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••"
-                    class="block w-full pl-11 py-3 rounded-xl border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-500 transition-shadow shadow-sm">
+            <div class="flex items-center justify-between mb-1">
+                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña</label>
+                @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}" class="text-xs text-emerald-700 dark:text-emerald-400 hover:underline">¿La olvidaste?</a>
+                @endif
             </div>
+            <input id="password" type="password" name="password" required autocomplete="current-password"
+                class="form-input block w-full px-3 py-2 rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-emerald-600 focus:ring-emerald-600">
         </div>
 
-        <!-- Opciones Adicionales (Recordarme y Olvidé mi contraseña) -->
-        <div class="flex items-center justify-between mt-2">
-            <label for="remember_me" class="flex items-center cursor-pointer group">
-                <input id="remember_me" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 dark:bg-slate-800 dark:border-gray-600 cursor-pointer transition-colors" name="remember">
-                <span class="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors select-none">Recordarme</span>
-            </label>
+        <label for="remember_me" class="inline-flex items-center gap-2 cursor-pointer select-none">
+            <input id="remember_me" type="checkbox" name="remember" class="form-checkbox w-4 h-4 rounded border-gray-300 text-emerald-700 focus:ring-emerald-600 dark:bg-slate-800 dark:border-gray-600">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Recordarme</span>
+        </label>
 
-
-        </div>
-
-        <!-- Botón Ingresar -->
-        <div class="pt-2">
-            <button type="submit" class="w-full flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-bold text-white transition-all bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 rounded-xl shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-slate-900">
-                Iniciar Sesión
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-            </button>
-        </div>
+        <button type="submit" class="w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 dark:focus:ring-offset-slate-900 transition-colors">
+            Ingresar
+        </button>
     </form>
 
-    <!-- Footer / Aviso -->
-    <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
-        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 p-4 rounded-xl flex items-start gap-3">
-            <div class="mt-0.5 p-1.5 bg-amber-100 dark:bg-amber-800/50 rounded-lg text-amber-600 dark:text-amber-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </div>
-            <div>
-                <h4 class="text-sm font-bold text-amber-800 dark:text-amber-300">Acceso Seguro</h4>
-                <p class="text-xs text-amber-700 dark:text-amber-400 mt-1 leading-relaxed">Su información está protegida con encriptación de extremo a extremo.</p>
-            </div>
+    @if (config('demo.enabled'))
+        <!-- Modo demostración (DEMO_MODE=true, ver config/demo.php) -->
+        <div class="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
+            <p class="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">Usuarios de prueba</p>
+
+            <!-- Accesos directos: llenan el formulario con el usuario de prueba y lo envían -->
+            <ul class="divide-y divide-gray-200 dark:divide-gray-700 rounded-lg border border-gray-200 dark:border-gray-700">
+                @foreach (config('demo.users') as $demoUser)
+                    <li>
+                        <button type="button" data-demo-login data-email="{{ $demoUser['email'] }}" data-password="{{ $demoUser['password'] }}"
+                            class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors first:rounded-t-lg last:rounded-b-lg">
+                            <span class="min-w-0">
+                                <span class="block text-sm font-medium text-gray-800 dark:text-gray-100">{{ $demoUser['label'] }}</span>
+                                <span class="block text-xs text-gray-500 dark:text-gray-400 truncate">{{ $demoUser['email'] }}</span>
+                            </span>
+                            <span class="shrink-0 text-xs text-gray-500 dark:text-gray-400">{{ $demoUser['role'] }}</span>
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
+
+            <!-- Restablecer la base de demostración (migrate:fresh --seed) -->
+            <form id="demo-reset-form" method="POST" action="{{ route('demo.reset') }}" class="mt-3 flex items-center justify-between gap-3">
+                @csrf
+                <span class="text-xs text-gray-400 dark:text-gray-500">Vuelve el inventario y los registros a su estado inicial.</span>
+                <button type="submit" id="demo-reset-button"
+                    class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60 disabled:cursor-wait">
+                    <svg id="demo-reset-icon" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span id="demo-reset-label">Actualizar inventario</span>
+                </button>
+            </form>
         </div>
-    </div>
+
+        <script>
+            document.querySelectorAll('[data-demo-login]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    document.getElementById('email').value = button.dataset.email;
+                    document.getElementById('password').value = button.dataset.password;
+                    document.getElementById('login-form').requestSubmit();
+                });
+            });
+
+            document.getElementById('demo-reset-form').addEventListener('submit', (event) => {
+                if (! confirm('¿Restablecer los datos de demostración?\n\nSe borran todas las ventas, compras, movimientos y cambios hechos, y el inventario vuelve a su estado inicial.')) {
+                    event.preventDefault();
+                    return;
+                }
+
+                document.getElementById('demo-reset-button').disabled = true;
+                document.getElementById('demo-reset-icon').classList.add('animate-spin');
+                document.getElementById('demo-reset-label').textContent = 'Restableciendo...';
+            });
+        </script>
+    @endif
+
 </x-authentication-layout>
