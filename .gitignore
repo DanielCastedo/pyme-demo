@@ -1,0 +1,93 @@
+# ── Dependencias ─────────────────────────────────────────
+/vendor/
+/node_modules/
+
+# ── Entorno y secretos (NUNCA versionar credenciales) ────
+.env
+.env.*
+!.env.example
+auth.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ── Archivos subidos por usuarios (fotos, logos, QR...) ──
+# Viven en el servidor, no en el repositorio. Se conserva la carpeta con .gitkeep.
+/public/uploads/*
+!/public/uploads/.gitkeep
+/public/storage
+/storage/*.key
+
+# ── Compilados / servidores de desarrollo ────────────────
+/public/hot
+/dist/
+/build/
+
+# ── Caché, logs y temporales del framework y herramientas ─
+*.log
+npm-debug.log*
+yarn-error.log
+.phpunit.result.cache
+.phpunit.cache/
+.php-cs-fixer.cache
+.phpcs.cache
+/coverage/
+/bootstrap/cache/*.tmp
+/bootstrap/cache/pac*.tmp
+/bootstrap/cache/ser*.tmp
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+
+# ── Bases de datos locales y volcados ────────────────────
+*.sqlite
+*.sqlite3
+/database/*.sqlite
+/*.sql
+/*.sql.gz
+/*.dump
+
+# ── Excel / Office: archivos de bloqueo y temporales ─────
+~$*
+.~lock.*
+
+# ── Entornos locales (Homestead / Vagrant / Docker override) ─
+/.vagrant
+Homestead.json
+Homestead.yaml
+docker-compose.override.yml
+
+# ── Editores / IDEs ──────────────────────────────────────
+.idea/
+.vscode/
+.fleet/
+.nova/
+.zed/
+*.sublime-project
+*.sublime-workspace
+
+# ── Claude Code: se comparten las skills del proyecto, no la config local ─
+.claude/settings.local.json
+.claude/*.local.*
+.claude/worktrees/
+
+# ── Sistema operativo ────────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── Archivos pesados que no van al repositorio ───────────
+*.mp4
+*.mov
+*.avi
+*.flv
+*.wmv
+*.tiff

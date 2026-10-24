@@ -1,0 +1,32 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+
+/* Additional styles */
+@import 'additional-styles/utility-patterns.css';
+@import 'additional-styles/flatpickr.css';
+
+@import 'tailwindcss/utilities';
+
+/*
+ * @tailwindcss/forms trae por defecto el foco/check en azul (blue-600) en todos los inputs,
+ * selects, textareas y checkboxes/radios que no traen su propio color de foco. Se sobreescribe
+ * aquí a verde para que quede acorde a la paleta del sistema (los componentes que ya definen su
+ * propio focus:ring-* o text-* siguen ganando, porque las utilidades de Tailwind se cargan después).
+ */
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus,
+.form-multiselect:focus {
+    --tw-ring-color: #059669; /* emerald-600 */
+    border-color: #059669;
+}
+
+.form-checkbox,
+.form-radio {
+    color: #059669; /* emerald-600 */
+}
+
+.form-checkbox:focus,
+.form-radio:focus {
+    --tw-ring-color: #059669;
+}

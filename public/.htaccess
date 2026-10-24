@@ -1,0 +1,82 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Redirige a HTTPS siempre (quita este bloque si tu SSL aún no está activo)
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Maneja Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirige Trailing Slashes si no es una carpeta real...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Envía las peticiones que no sean para archivos/carpetas reales a index.php
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# ── Límites de subida de archivos (comprobantes de pago, fotos de productos, etc.) ──
+<IfModule mod_php.c>
+    php_value upload_max_filesize 20M
+    php_value post_max_size 25M
+    php_value max_execution_time 60
+    php_value max_input_time 60
+    php_value memory_limit 256M
+</IfModule>
+
+# Algunos hostings (LiteSpeed/PHP-FPM) no leen php_value desde .htaccess.
+# Si esta sección da Error 500, bórrala y configura los límites desde
+# hPanel → PHP Configuration en su lugar.
+
+# ── Cache-busting: archivos compilados (Vite) se cachean "para siempre" ──
+# Como Vite les pone un hash único en el nombre en cada build
+# (app-B1rhSaFp.css, app-B8b-9ADw.js), un archivo con ese nombre NUNCA cambia.
+# Si el build cambia, el nombre del archivo también cambia — así que es
+# seguro decirle al navegador que lo guarde por 1 año sin volver a pedirlo.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # El HTML (y cualquier respuesta dinámica de Laravel) NUNCA se cachea,
+    # así el navegador siempre pide la página fresca, que a su vez apunta
+    # al manifest.json actualizado con los nuevos hashes de archivos.
+    <FilesMatch "\.(html|htm|php)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+
+    # Cabeceras de seguridad básicas
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── Compresión GZIP: acelera la carga de CSS/JS/HTML ──
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ── Bloquea el acceso directo a archivos sensibles ──
+<FilesMatch "^\.env|composer\.(json|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

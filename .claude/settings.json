@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(php artisan migrate --force 2>&1)",
+      "PowerShell(php storage/app/debug_backfill.php 2>&1)"
+    ]
+  }
+}

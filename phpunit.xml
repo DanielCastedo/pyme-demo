@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <!--
+            Las pruebas nunca deben leer los cachés de producción/desarrollo (php artisan config:cache / route:cache / optimize).
+            Con config:cache activo Laravel ignora estas variables y usaría la base real (MySQL); con route:cache faltarían las
+            rutas nuevas. Estas rutas apuntan a archivos que no existen, así que se carga todo desde cero en cada ejecución.
+        -->
+        <env name="APP_CONFIG_CACHE" value="bootstrap/cache/config.testing.php"/>
+        <env name="APP_ROUTES_CACHE" value="bootstrap/cache/routes.testing.php"/>
+        <env name="APP_EVENTS_CACHE" value="bootstrap/cache/events.testing.php"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+    </php>
+</phpunit>
