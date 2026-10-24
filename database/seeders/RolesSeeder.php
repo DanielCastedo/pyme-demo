@@ -27,7 +27,7 @@ class RolesSeeder extends Seeder
             // ── SUPERADMIN: acceso a todo el sistema ─────────────────────────
             'superadmin' => self::TODOS,
 
-            // ── ADMIN: módulos operativos del día a día de la ferretería ─────
+            // ── ADMIN: módulos operativos del día a día de la farmacia ─────
             'admin' => [
                 // Configuración
                 'ver companies', 'editar companies',
@@ -111,6 +111,6 @@ class RolesSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ Roles y permisos de la ferretería asignados correctamente.');
+        $this->command->info('✅ Roles y permisos de la farmacia asignados correctamente.');
     }
 }

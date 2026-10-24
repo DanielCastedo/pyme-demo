@@ -13,7 +13,7 @@ class UsuariosSeeder extends Seeder
 {
     public function run(): void
     {
-        $sucursal = Branch::where('name', 'Sucursal Brazil Importaciones')->first() ?? Branch::first();
+        $sucursal = Branch::where('name', BranchSeeder::CENTRAL)->first() ?? Branch::first();
 
         if (! $sucursal) {
             $this->command->warn('No hay sucursales. Corre primero el BranchSeeder.');
@@ -28,23 +28,18 @@ class UsuariosSeeder extends Seeder
                 'role' => 'superadmin',
             ],
             [
-                'email' => 'nora@importdcb.com',
-                'datos' => ['name' => 'Nora', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
+                'email' => 'regente@farmaciasantarosa.com',
+                'datos' => ['name' => 'Dra. Carla Vaca (Regente)', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
                 'role' => 'admin',
             ],
             [
-                'email' => 'gabriel@importdcb.com',
-                'datos' => ['name' => 'Gabriel', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
+                'email' => 'administracion@farmaciasantarosa.com',
+                'datos' => ['name' => 'Luis Justiniano (Administración)', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
                 'role' => 'admin',
             ],
             [
-                'email' => 'hernesto@importdcb.com',
-                'datos' => ['name' => 'Hernesto', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
-                'role' => 'admin',
-            ],
-            [
-                'email' => 'operador@importdcb.com',
-                'datos' => ['name' => 'Operador de Ventas', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
+                'email' => 'operador@farmaciasantarosa.com',
+                'datos' => ['name' => 'Auxiliar de Farmacia', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
                 'role' => 'operador',
             ],
         ];
@@ -54,6 +49,6 @@ class UsuariosSeeder extends Seeder
             $user->syncRoles([$u['role']]);
         }
 
-        $this->command->info('✅ Usuarios de la ferretería creados y roles asignados correctamente.');
+        $this->command->info('✅ Usuarios de la farmacia creados y roles asignados correctamente.');
     }
 }

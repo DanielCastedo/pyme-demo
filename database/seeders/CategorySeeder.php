@@ -10,9 +10,12 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         foreach ([
-            ['name' => 'Herramientas Manuales', 'description' => 'Martillos, destornilladores y llaves.'],
-            ['name' => 'Ferretería General', 'description' => 'Tornillos, clavos y piezas sueltas.'],
-            ['name' => 'Pinturas y Acabados', 'description' => 'Pinturas, barnices y brochas.'],
+            ['name' => 'Analgésicos y Antipiréticos', 'description' => 'Paracetamol, ibuprofeno, diclofenaco y similares.'],
+            ['name' => 'Antibióticos', 'description' => 'Venta con receta médica.'],
+            ['name' => 'Respiratorios y Antigripales', 'description' => 'Jarabes, expectorantes y antigripales.'],
+            ['name' => 'Vitaminas y Suplementos', 'description' => 'Multivitamínicos, vitamina C, hierro y suplementos.'],
+            ['name' => 'Material de Curación', 'description' => 'Gasas, vendas, alcohol, algodón y botiquines.'],
+            ['name' => 'Cuidado Personal e Higiene', 'description' => 'Higiene, protectores solares y cuidado de la piel.'],
         ] as $category) {
             Category::updateOrCreate(['name' => $category['name']], $category);
         }

@@ -28,9 +28,9 @@ class PedidoSeeder extends Seeder
             'delivery_date' => now()->addDays(3)->toDateString(),
             'note' => 'Retira en 3 días',
         ], [
-            ['product_unit_id' => $this->unit('HM-0001')->id, 'quantity' => 3],
+            ['product_unit_id' => $this->unit('MED-0002')->id, 'quantity' => 3],
         ], $this->admin());
 
-        $this->command->info('✅ Pedido de ejemplo registrado (3 martillos, en espera).');
+        $this->command->info('✅ Pedido de ejemplo registrado (3 jarabes de ambroxol, en espera).');
     }
 }

@@ -24,8 +24,8 @@ class ExpenseSeeder extends Seeder
         }
 
         foreach ([
-            ['Pago de energía eléctrica', 250, 'Servicios básicos (luz, agua, internet)', 12, 'FAC-948201'],
-            ['Flete de mercadería', 150, 'Transporte y fletes', 8, 'GUIA-882'],
+            ['Pago de energía eléctrica (incluye refrigerador de medicamentos)', 250, 'Servicios básicos (luz, agua, internet)', 12, 'FAC-948201'],
+            ['Renovación de permiso de funcionamiento sanitario', 150, 'Permisos y trámites sanitarios', 8, 'REC-2026-0451'],
         ] as [$concept, $amount, $category, $daysAgo, $receipt]) {
             $expenses->register([
                 'date' => now()->subDays($daysAgo)->toDateString(),

@@ -11,8 +11,8 @@ class PromotionProductSeeder extends Seeder
     public function run(): void
     {
         $reglas = [
-            'Lanzamiento Herramientas Eléctricas' => 'Herramientas Eléctricas',
-            'Descuento por Volumen Construcción' => 'Materiales de Construcción',
+            'Mes de las Vitaminas' => 'Vitaminas y Suplementos',
+            'Descuento por Volumen Material de Curación' => 'Material de Curación',
         ];
 
         foreach ($reglas as $promotionName => $categoryName) {

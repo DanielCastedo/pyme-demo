@@ -10,8 +10,8 @@ use Illuminate\Database\Seeder;
 
 /**
  * Entradas de stock a mano (sin compra). Cada entrada crea un lote con su propio costo:
- * los martillos entran en dos lotes a distinto costo, así se ve cómo la venta gasta primero el más antiguo (FIFO).
- * La pintura entra con poco stock a propósito (ver ProductWarehouseSeeder: su mínimo es 5).
+ * el ambroxol entra en dos lotes a distinto costo, así se ve cómo la venta gasta primero el más antiguo (FIFO).
+ * La amoxicilina entra con poco stock a propósito (ver ProductWarehouseSeeder: su mínimo es 5).
  */
 class StockMovementSeeder extends Seeder
 {
@@ -27,15 +27,16 @@ class StockMovementSeeder extends Seeder
 
         $entrada = Type::where('code', 'ENT')->firstOrFail();
 
-        $stock->register($entrada, $this->warehouse()->id, now()->subDays(20), 'Primer lote de martillos', $this->admin()->id, [
-            ['product_unit_id' => $this->unit('HM-0001')->id, 'quantity' => 10, 'unit_cost' => 35],
+        $stock->register($entrada, $this->warehouse()->id, now()->subDays(20), 'Inventario inicial de ambroxol', $this->admin()->id, [
+            ['product_unit_id' => $this->unit('MED-0002')->id, 'quantity' => 10, 'unit_cost' => 22],
         ]);
 
-        $stock->register($entrada, $this->warehouse()->id, now()->subDays(10), 'Segundo lote (llegó más caro) y pintura', $this->admin()->id, [
-            ['product_unit_id' => $this->unit('HM-0001')->id, 'quantity' => 10, 'unit_cost' => 40],
-            ['product_unit_id' => $this->unit('PA-0001')->id, 'quantity' => 3, 'unit_cost' => 180],
+        $stock->register($entrada, $this->warehouse()->id, now()->subDays(10), 'Segundo lote de ambroxol (llegó más caro), amoxicilina y vitamina C', $this->admin()->id, [
+            ['product_unit_id' => $this->unit('MED-0002')->id, 'quantity' => 10, 'unit_cost' => 25],
+            ['product_unit_id' => $this->unit('MED-0003')->id, 'quantity' => 3, 'unit_cost' => 28],
+            ['product_unit_id' => $this->unit('VIT-0001')->id, 'quantity' => 30, 'unit_cost' => 15],
         ]);
 
-        $this->command->info('✅ Entradas de stock de ejemplo registradas (martillos en 2 lotes y pintura).');
+        $this->command->info('✅ Entradas de stock de ejemplo registradas (ambroxol en 2 lotes, amoxicilina y vitamina C).');
     }
 }

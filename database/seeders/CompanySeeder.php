@@ -12,12 +12,12 @@ class CompanySeeder extends Seeder
         Company::updateOrCreate(
             ['id' => 1], // asegura que siempre exista un único registro
             [
-                'name' => 'Daniela ImportDCB',
-                'legal_name' => null,
+                'name' => 'Farmacia Santa Rosa',
+                'legal_name' => 'Farmacia Santa Rosa S.R.L.',
                 'tax_id' => null,
-                'phone' => null,
+                'phone' => '3-3361234',
                 'email' => null,
-                'address' => null,
+                'address' => 'Av. Irala esq. calle Ejército',
                 'city' => 'Santa Cruz de la Sierra',
                 'country' => 'Bolivia',
                 'currency' => 'BOB',

@@ -22,25 +22,25 @@ class QuotationSeeder extends Seeder
         $cotizaciones = [
             [
                 'number' => 'COT-0001',
-                'customer_name' => 'Constructora Santa Cruz S.R.L.',
-                'customer_document' => '102938475',
-                'customer_phone' => '76061697',
-                'notes' => 'Cotización para remodelación de baño.',
+                'customer_name' => 'Clínica San Lucas S.R.L.',
+                'customer_document' => '1023456029',
+                'customer_phone' => '3-3221100',
+                'notes' => 'Proforma de material de curación para el área de emergencias.',
                 'items' => [
-                    ['sku' => 'PL-0001', 'quantity' => 4],
-                    ['sku' => 'PL-0002', 'quantity' => 6],
-                    ['sku' => 'PL-0003', 'quantity' => 1],
+                    ['sku' => 'CUR-0001', 'quantity' => 50],
+                    ['sku' => 'CUR-0002', 'quantity' => 12],
+                    ['sku' => 'CUR-0003', 'quantity' => 5],
                 ],
             ],
             [
                 'number' => 'COT-0002',
-                'customer_name' => 'Ing. Roberto Méndez',
-                'customer_document' => '5489201 SC',
-                'customer_phone' => '71029384',
-                'notes' => 'Cotización para obra gruesa pequeña.',
+                'customer_name' => 'Consultorio Dra. María Fernández',
+                'customer_document' => '7788990',
+                'customer_phone' => '76543210',
+                'notes' => 'Proforma de medicamentos para el consultorio.',
                 'items' => [
-                    ['sku' => 'MC-0001', 'quantity' => 20],
-                    ['sku' => 'MC-0002', 'quantity' => 15],
+                    ['sku' => 'MED-0002', 'quantity' => 6],
+                    ['sku' => 'VIT-0001', 'quantity' => 10],
                 ],
             ],
         ];

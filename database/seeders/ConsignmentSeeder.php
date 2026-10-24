@@ -8,7 +8,7 @@ use Database\Seeders\Concerns\UsesDemoData;
 use Illuminate\Database\Seeder;
 
 /**
- * Una consignación abierta: 5 martillos salen del almacén y quedan en manos del cliente sin cobrarse;
+ * Una consignación abierta: 5 tubos de vitamina C salen del almacén y quedan en el consultorio sin cobrarse;
  * después se liquida lo que vendió y lo que devuelve.
  */
 class ConsignmentSeeder extends Seeder
@@ -27,11 +27,11 @@ class ConsignmentSeeder extends Seeder
             'customer_id' => $this->customer('7788990')->id,
             'warehouse_id' => $this->warehouse()->id,
             'due_date' => now()->addDays(30)->toDateString(),
-            'note' => 'Martillos para exhibir en su tienda',
+            'note' => 'Vitamina C para ofrecer en el consultorio',
         ], [
-            ['product_unit_id' => $this->unit('HM-0001')->id, 'quantity' => 5],
+            ['product_unit_id' => $this->unit('VIT-0001')->id, 'quantity' => 5],
         ], $this->admin());
 
-        $this->command->info('✅ Consignación de ejemplo registrada (5 martillos).');
+        $this->command->info('✅ Consignación de ejemplo registrada (5 tubos de vitamina C).');
     }
 }

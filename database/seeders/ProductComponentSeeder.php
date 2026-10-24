@@ -7,26 +7,26 @@ use App\Models\ProductComponent;
 use Illuminate\Database\Seeder;
 
 /**
- * Kit de ejemplo: la Mesa de comedor no guarda stock propio; al venderla se descuentan sus partes.
+ * Kit de ejemplo: el Botiquín no guarda stock propio; al venderlo se descuentan sus partes.
  * "quantity" es cuántas unidades de esa parte lleva UN kit.
  */
 class ProductComponentSeeder extends Seeder
 {
     public function run(): void
     {
-        $mesa = Product::where('sku', 'FG-0004')->firstOrFail();
+        $botiquin = Product::where('sku', 'CUR-0003')->firstOrFail();
 
         foreach ([
-            'FG-0002' => 4, // patas
-            'FG-0003' => 1, // tablero
-            'FG-0001' => 8, // tornillos
+            'CUR-0001' => 4, // gasas
+            'CUR-0002' => 1, // alcohol
+            'MED-0001' => 8, // tabletas de paracetamol
         ] as $sku => $quantity) {
             ProductComponent::updateOrCreate(
-                ['product_id' => $mesa->id, 'component_product_id' => Product::where('sku', $sku)->firstOrFail()->id],
+                ['product_id' => $botiquin->id, 'component_product_id' => Product::where('sku', $sku)->firstOrFail()->id],
                 ['quantity' => $quantity]
             );
         }
 
-        $this->command->info('✅ Kit de ejemplo creado (Mesa de comedor = 4 patas + 1 tablero + 8 tornillos).');
+        $this->command->info('✅ Kit de ejemplo creado (Botiquín = 4 gasas + 1 alcohol + 8 tabletas de paracetamol).');
     }
 }
