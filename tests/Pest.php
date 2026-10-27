@@ -16,7 +16,7 @@ use Tests\TestCase;
 | Configuración global
 |--------------------------------------------------------------------------
 | Todas las pruebas de Feature usan la aplicación completa y una base de datos limpia por prueba
-| (SQLite en memoria, ver phpunit.xml; tests/CreatesApplication.php frena cualquier otra conexión).
+| (SQLite en database/testing.sqlite, ver phpunit.xml; tests/CreatesApplication.php frena cualquier otra conexión).
 */
 
 uses(TestCase::class, RefreshDatabase::class)

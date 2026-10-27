@@ -17,8 +17,11 @@ class DemoController extends Controller
     {
         abort_unless(config('demo.enabled'), 404);
 
-        // migrate:fresh + seeders puede tardar varios segundos en MySQL.
-        @set_time_limit(300);
+        // migrate:fresh + seeders puede tardar varios segundos en MySQL. Solo en peticiones web: en consola
+        // (pruebas) set_time_limit le pondría ese límite a todo el proceso de PHPUnit.
+        if (! app()->runningInConsole()) {
+            @set_time_limit(300);
+        }
 
         try {
             Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
