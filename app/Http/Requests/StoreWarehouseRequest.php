@@ -15,6 +15,8 @@ class StoreWarehouseRequest extends FormRequest
     {
         return [
             'branche_id' => 'required|exists:branches,id',
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => 'integer|exists:branches,id',
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:100|unique:warehouses,code',
             'is_active' => 'nullable|boolean',

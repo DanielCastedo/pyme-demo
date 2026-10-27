@@ -22,13 +22,19 @@ return [
         [
             'label' => 'Administración',
             'role' => 'Administrador',
-            'email' => 'administracion@farmaciasantarosa.com',
+            'email' => 'administracion@ferreteriasantarosa.com',
             'password' => '12345678',
         ],
         [
-            'label' => 'Auxiliar de Farmacia',
-            'role' => 'Operador',
-            'email' => 'operador@farmaciasantarosa.com',
+            'label' => 'Vendedor Norte',
+            'role' => 'Operador · usa el Almacén Central',
+            'email' => 'operador@ferreteriasantarosa.com',
+            'password' => '12345678',
+        ],
+        [
+            'label' => 'Vendedor Plan 3000',
+            'role' => 'Operador · almacén propio',
+            'email' => 'plan3000@ferreteriasantarosa.com',
             'password' => '12345678',
         ],
     ],

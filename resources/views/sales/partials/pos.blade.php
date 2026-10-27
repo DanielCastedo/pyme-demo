@@ -210,7 +210,7 @@
                         <div class="mt-3 space-y-3">
                             <div>
                                 <label class="block text-[11px] text-gray-500 mb-1">Sucursal</label>
-                                <select id="branch-id" class="w-full h-9 px-2 text-sm rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
+                                <select name="branche_id" id="branch-id" class="w-full h-9 px-2 text-sm rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
                                     @foreach ($branches as $b)
                                         <option value="{{ $b->id }}">{{ $b->name }}</option>
                                     @endforeach
@@ -499,7 +499,7 @@
                     items: @json(old('items', $initialItems)),
                     warehouse: @json(old('warehouse_id', $initialWarehouseId)),
                     cashbox: @json(old('cashbox_id')),
-                    branch: @json($defaultBranchId),
+                    branch: @json(old('branche_id', $initialBranchId ?? $defaultBranchId)),
                     customer: @json(old('customer_id', $initialCustomerId)),
                 };
 
@@ -566,7 +566,7 @@
 
                 function applyBranch(preferWh, preferCb) {
                     const b = branchSel.value;
-                    fillSelect(whSel, warehouses.filter((w) => String(w.branche_id) === String(b)), preferWh);
+                    fillSelect(whSel, warehouses.filter((w) => (w.branch_ids || [w.branche_id]).map(String).includes(String(b))), preferWh);
                     if (cbSel) fillSelect(cbSel, cashboxes.filter((c) => String(c.branche_id) === String(b)), preferCb);
                     updateSummary();
                     updateQrPreview();

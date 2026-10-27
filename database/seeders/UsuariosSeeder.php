@@ -13,42 +13,32 @@ class UsuariosSeeder extends Seeder
 {
     public function run(): void
     {
-        $sucursal = Branch::where('name', BranchSeeder::CENTRAL)->first() ?? Branch::first();
+        $branches = Branch::whereIn('name', [BranchSeeder::CENTRAL, BranchSeeder::NORTE, BranchSeeder::PLAN_3000])->pluck('id', 'name');
 
-        if (! $sucursal) {
-            $this->command->warn('No hay sucursales. Corre primero el BranchSeeder.');
+        if ($branches->count() < 3) {
+            $this->command->warn('Faltan sucursales. Corre primero el BranchSeeder.');
 
             return;
         }
 
         $usuarios = [
-            [
-                'email' => 'admin@gmail.com',
-                'datos' => ['name' => 'admin', 'password' => Hash::make('123'), 'branche_id' => $sucursal->id],
-                'role' => 'superadmin',
-            ],
-            [
-                'email' => 'regente@farmaciasantarosa.com',
-                'datos' => ['name' => 'Dra. Carla Vaca (Regente)', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
-                'role' => 'admin',
-            ],
-            [
-                'email' => 'administracion@farmaciasantarosa.com',
-                'datos' => ['name' => 'Luis Justiniano (Administración)', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
-                'role' => 'admin',
-            ],
-            [
-                'email' => 'operador@farmaciasantarosa.com',
-                'datos' => ['name' => 'Auxiliar de Farmacia', 'password' => Hash::make('12345678'), 'branche_id' => $sucursal->id],
-                'role' => 'operador',
-            ],
+            ['admin@gmail.com', 'admin', '123', BranchSeeder::CENTRAL, 'superadmin'],
+            ['encargado@ferreteriasantarosa.com', 'Jorge Suárez (Encargado)', '12345678', BranchSeeder::CENTRAL, 'admin'],
+            ['administracion@ferreteriasantarosa.com', 'Luis Justiniano (Administración)', '12345678', BranchSeeder::CENTRAL, 'admin'],
+            // Vende en la sucursal Norte, que saca la mercadería del Almacén Central (compartido).
+            ['operador@ferreteriasantarosa.com', 'Vendedor Norte', '12345678', BranchSeeder::NORTE, 'operador'],
+            ['plan3000@ferreteriasantarosa.com', 'Vendedor Plan 3000', '12345678', BranchSeeder::PLAN_3000, 'operador'],
         ];
 
-        foreach ($usuarios as $u) {
-            $user = User::updateOrCreate(['email' => $u['email']], $u['datos']);
-            $user->syncRoles([$u['role']]);
+        foreach ($usuarios as [$email, $name, $password, $branch, $role]) {
+            $user = User::updateOrCreate(['email' => $email], [
+                'name' => $name,
+                'password' => Hash::make($password),
+                'branche_id' => $branches[$branch],
+            ]);
+            $user->syncRoles([$role]);
         }
 
-        $this->command->info('✅ Usuarios de la farmacia creados y roles asignados correctamente.');
+        $this->command->info('✅ Usuarios de la ferretería creados y roles asignados correctamente.');
     }
 }

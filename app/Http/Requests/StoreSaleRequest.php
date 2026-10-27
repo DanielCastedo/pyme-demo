@@ -18,6 +18,7 @@ class StoreSaleRequest extends FormRequest
         return [
             'customer_id' => 'nullable|exists:customers,id',
             'warehouse_id' => 'required|exists:warehouses,id',
+            'branche_id' => 'nullable|exists:branches,id',
             'payment_type' => 'nullable|in:cash,credit',
             'due_date' => 'required_if:payment_type,credit|nullable|date|after:today',
             'initial_payment' => 'nullable|numeric|min:0',

@@ -36,7 +36,7 @@ class PosFormData
 
         return [
             'branches' => $branches,
-            'warehouses' => Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name', 'branche_id']),
+            'warehouses' => Warehouse::activeForForms(),
             'cashboxes' => Cashbox::orderBy('name')->get(['id', 'name', 'branche_id']),
             'paymentMethods' => PaymentMethod::orderByDesc('is_cash')->orderBy('name')->get(['id', 'name', 'is_cash']),
             'defaultBranchId' => $user->branche_id ?? $branches->first()?->id,

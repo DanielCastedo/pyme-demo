@@ -8,6 +8,7 @@
         'submitLabel' => 'Guardar cambios',
         'initialCustomerId' => $pedido->customer_id,
         'initialWarehouseId' => $pedido->warehouse_id,
+        'initialBranchId' => $pedido->branche_id,
         'deliveryDate' => optional($pedido->delivery_date)->format('Y-m-d'),
         'note' => $pedido->memo,
     ])

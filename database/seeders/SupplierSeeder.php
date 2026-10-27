@@ -11,22 +11,22 @@ class SupplierSeeder extends Seeder
     {
         foreach ([
             [
-                'name' => 'Droguería Andina Farma S.A.',
+                'name' => 'Importadora de Herramientas del Sur S.A.',
                 'document_type' => 'nit',
                 'document' => '3049582019',
                 'contact_name' => 'Hernán Roca',
                 'phone' => '3-3335566',
-                'email' => 'ventas@andinafarma.example',
+                'email' => 'ventas@herramientasdelsur.example',
                 'address' => 'Av. Mutualista entre 2do y 3er Anillo',
                 'city' => 'Santa Cruz',
             ],
             [
-                'name' => 'Distribuidora Médica del Oriente S.R.L.',
+                'name' => 'Distribuidora Ferretera del Oriente S.R.L.',
                 'document_type' => 'nit',
                 'document' => '1029384019',
                 'contact_name' => 'Carlos Alberto Silva',
                 'phone' => '3-3448899',
-                'email' => 'pedidos@medicaoriente.example',
+                'email' => 'pedidos@ferreteraoriente.example',
                 'address' => 'Parque Industrial PI-32',
                 'city' => 'Santa Cruz',
             ],

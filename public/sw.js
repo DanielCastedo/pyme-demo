@@ -5,7 +5,7 @@
  * - Cachea los archivos estáticos compilados (/build) y las imágenes para que la app abra más rápido.
  * Al cambiar este archivo, sube VERSION para que los navegadores limpien la caché anterior.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const STATIC_CACHE = `static-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL];

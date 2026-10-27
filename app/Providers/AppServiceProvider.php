@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,5 +27,10 @@ class AppServiceProvider extends ServiceProvider
         Model::handleLazyLoadingViolationUsing(function ($model, string $relation) {
             logger()->warning('N+1: se cargó la relación "'.$relation.'" de '.get_class($model).' una por una; usa with() / load() en la consulta.');
         });
+
+        // URL del logo con ?v=fecha del archivo: al reemplazar la imagen, el navegador (y el service worker,
+        // que guarda /images/ en caché) piden la nueva en vez de seguir mostrando la vieja.
+        $logo = (string) config('app.logo', 'images/logo-pymes.png');
+        View::share('appLogoUrl', '/'.$logo.(is_file(public_path($logo)) ? '?v='.filemtime(public_path($logo)) : ''));
     }
 }

@@ -6,21 +6,27 @@ use App\Models\Branch;
 use Illuminate\Database\Seeder;
 
 /**
- * La farmacia trabaja con una sola sucursal: todo (usuarios, almacén, caja) cuelga de ella.
+ * La ferretería tiene tres sucursales. Central y Norte venden del mismo almacén (ver WarehouseSeeder);
+ * Plan 3000 tiene su propio depósito.
  */
 class BranchSeeder extends Seeder
 {
-    public const CENTRAL = 'Farmacia Santa Rosa - Central';
+    public const CENTRAL = 'Ferretería Santa Rosa - Central';
+
+    public const NORTE = 'Ferretería Santa Rosa - Norte';
+
+    public const PLAN_3000 = 'Ferretería Santa Rosa - Plan 3000';
 
     public function run(): void
     {
-        Branch::updateOrCreate(['name' => self::CENTRAL], [
-            'name' => self::CENTRAL,
-            'address' => 'Av. Irala esq. calle Ejército, frente al Hospital San Juan de Dios',
-            'phone' => '3-3361234',
-            'is_active' => true,
-        ]);
+        foreach ([
+            [self::CENTRAL, 'Av. Grigotá esq. 3er anillo interno', '3-3524100'],
+            [self::NORTE, 'Av. Banzer, 6to anillo, frente al mercado Abasto Norte', '3-3428200'],
+            [self::PLAN_3000, 'Av. Paurito, Plan 3000, UV 160', '3-3627300'],
+        ] as [$name, $address, $phone]) {
+            Branch::updateOrCreate(['name' => $name], ['address' => $address, 'phone' => $phone, 'is_active' => true]);
+        }
 
-        $this->command->info('✅ Sucursal creada correctamente.');
+        $this->command->info('✅ Sucursales creadas correctamente.');
     }
 }

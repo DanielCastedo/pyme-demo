@@ -9,9 +9,10 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      *
-     * Farmacia con UNA sola sucursal (un almacén y una caja). Primero lo básico del sistema (usuarios, roles,
-     * menús, catálogos) y después una historia de ejemplo chica y coherente (ver cada seeder): medicamentos,
-     * un botiquín (kit), compras, ventas, un pedido y una consignación.
+     * Ferretería con tres sucursales: Central y Norte comparten el Almacén Central y Plan 3000 tiene su propio
+     * depósito (una caja por sucursal). Primero lo básico del sistema (usuarios, roles, menús, catálogos) y después
+     * una historia de ejemplo chica y coherente (ver cada seeder): herramientas, un juego de herramientas (kit),
+     * compras, ventas en cada sucursal, un pedido y una consignación.
      * Todo se registra con los mismos servicios que usa el sistema, así el stock y el dinero cuadran.
      *
      * Para tener solo lo básico, comenta el bloque "Datos de ejemplo".
@@ -42,7 +43,7 @@ class DatabaseSeeder extends Seeder
             ExpenseCategorySeeder::class,
             CategorySeeder::class,
 
-            // Dependen de la sucursal
+            // Dependen de las sucursales (Almacén Central compartido por Central y Norte)
             WarehouseSeeder::class,
             CashboxSeeder::class,
 
@@ -50,7 +51,7 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             CustomerSeeder::class,
 
-            // Productos: simples, con presentación (Paracetamol Caja x100) y un kit (Botiquín = gasas + alcohol + paracetamol)
+            // Productos: simples, con presentación (Tornillo Caja x100) y un kit (Juego de herramientas = destornilladores + alicate + tornillos)
             ProductSeeder::class,
             ProductUnitSeeder::class,
             ProductComponentSeeder::class,
@@ -61,7 +62,7 @@ class DatabaseSeeder extends Seeder
             ProductWarehouseSeeder::class, // stock mínimo (va después de tener stock)
             ExpenseSeeder::class,
 
-            // Ventas: kit al contado, contado con descuento y crédito con anticipo; un pedido y una consignación
+            // Ventas: kit, descuento, crédito y una venta en Norte (almacén compartido) y otra en Plan 3000; un pedido y una consignación
             OrderSeeder::class,
             PedidoSeeder::class,
             ConsignmentSeeder::class,

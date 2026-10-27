@@ -62,7 +62,7 @@ class ConsignmentService
             $consignment = Consignment::create([
                 'customer_id' => $customer->id,
                 'warehouse_id' => $warehouse->id,
-                'branche_id' => $warehouse->branche_id,
+                'branche_id' => $warehouse->resolveBranchId($data['branche_id'] ?? null, null, $user),
                 'user_id' => $user->id,
                 'date' => now()->toDateString(),
                 'due_date' => $data['due_date'] ?? null,
@@ -191,7 +191,7 @@ class ConsignmentService
             $order = $sold === [] ? null : $this->sales->registerFromConsignment(
                 $consignment->customer,
                 $consignment->warehouse,
-                ['note' => "Consignación #{$consignment->id}"] + $terms,
+                ['note' => "Consignación #{$consignment->id}", 'branche_id' => $consignment->branche_id] + $terms,
                 $sold,
                 $user
             );

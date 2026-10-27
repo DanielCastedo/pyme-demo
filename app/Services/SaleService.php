@@ -30,7 +30,7 @@ class SaleService
     ) {}
 
     /**
-     * @param  array{customer_id?: int|null, warehouse_id: int, note?: string|null, payment_type?: string, due_date?: string|null, initial_payment?: float|string|null, payment_id?: int|null, cashbox_id?: int|null}  $data
+     * @param  array{customer_id?: int|null, warehouse_id: int, branche_id?: int|null, note?: string|null, payment_type?: string, due_date?: string|null, initial_payment?: float|string|null, payment_id?: int|null, cashbox_id?: int|null}  $data
      * @param  array<int, array{product_unit_id: int, warehouse_id?: int|string|null, quantity: float|string, unit_price?: float|string|null, discount_type?: string|null, discount_value?: float|string|null}>  $items
      *         Cada línea puede traer su propio warehouse_id (de qué almacén sale ESA línea); si no trae,
      *         se asume el warehouse_id de la venta.
@@ -55,13 +55,15 @@ class SaleService
                 throw new \RuntimeException('El total de la venta debe ser mayor a 0.');
             }
 
-            $terms = $this->resolveTerms($data, $total, $customer, $warehouse, $user);
+            // La venta es de la sucursal que vende (puede compartir el almacén con otras), no de la dueña del almacén.
+            $branchId = $warehouse->resolveBranchId($data['branche_id'] ?? null, ! empty($data['cashbox_id']) ? Cashbox::find($data['cashbox_id']) : null, $user);
+            $terms = $this->resolveTerms($data, $total, $customer, $branchId, $user);
 
             $order = Order::create([
                 'user_id' => $user->id,
                 'customer_id' => $customer?->id,
                 'warehouse_id' => $warehouse->id,
-                'branche_id' => $warehouse->branche_id,
+                'branche_id' => $branchId,
                 'date' => now()->toDateString(),
                 'memo' => $data['note'] ?? null,
                 'amount' => $total,
@@ -113,7 +115,7 @@ class SaleService
                 throw new \RuntimeException('El pedido no tiene productos o su total es 0.');
             }
 
-            $terms = $this->resolveTerms($data, $order->amount, $order->customer, $order->warehouse, $user);
+            $terms = $this->resolveTerms($data, $order->amount, $order->customer, (int) $order->branche_id, $user);
 
             $order->update([
                 'status' => Order::STATUS_COMPLETED,
@@ -149,13 +151,14 @@ class SaleService
                 throw new \RuntimeException('El total de lo vendido debe ser mayor a 0.');
             }
 
-            $terms = $this->resolveTerms($data, $total, $customer, $warehouse, $user);
+            $branchId = (int) ($data['branche_id'] ?? $warehouse->branche_id);
+            $terms = $this->resolveTerms($data, $total, $customer, $branchId, $user);
 
             $order = Order::create([
                 'user_id' => $user->id,
                 'customer_id' => $customer->id,
                 'warehouse_id' => $warehouse->id,
-                'branche_id' => $warehouse->branche_id,
+                'branche_id' => $branchId,
                 'date' => now()->toDateString(),
                 'memo' => $data['note'] ?? null,
                 'amount' => $total,
@@ -223,7 +226,7 @@ class SaleService
      *
      * @throws \RuntimeException
      */
-    private function resolveTerms(array $data, int|float|string $total, ?Customer $customer, Warehouse $warehouse, User $user): array
+    private function resolveTerms(array $data, int|float|string $total, ?Customer $customer, int $branchId, User $user): array
     {
         $type = ($data['payment_type'] ?? Order::PAYMENT_CASH) === Order::PAYMENT_CREDIT ? Order::PAYMENT_CREDIT : Order::PAYMENT_CASH;
         $payment = ! empty($data['payment_id']) ? PaymentMethod::find($data['payment_id']) : null;
@@ -273,8 +276,8 @@ class SaleService
                 throw new \RuntimeException('Selecciona el método de pago y la caja donde se cobra.');
             }
 
-            if ((int) $cashbox->branche_id !== (int) $warehouse->branche_id) {
-                throw new \RuntimeException('La caja y el almacén elegidos no son de la misma sucursal.');
+            if ((int) $cashbox->branche_id !== $branchId) {
+                throw new \RuntimeException('La caja elegida no es de la sucursal que hace la venta.');
             }
         }
 

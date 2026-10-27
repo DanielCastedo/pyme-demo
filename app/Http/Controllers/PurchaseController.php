@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Support\Bc;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Requests\UpdatePurchaseRequest;
+use App\Models\Branch;
 use App\Models\Cashbox;
 use App\Models\Category;
 use App\Models\PaymentMethod;
@@ -167,7 +168,7 @@ class PurchaseController extends Controller
     {
         $user = auth()->user();
 
-        $warehouses = Warehouse::where('is_active', true)->orderBy('name')->get(['id', 'name', 'branche_id']);
+        $warehouses = Warehouse::activeForForms();
 
         return [
             'warehouses' => $warehouses,
@@ -177,7 +178,9 @@ class PurchaseController extends Controller
             'canCreateSupplier' => $user->can('create', Supplier::class),
             'canCredit' => $user->can('compras.credito'),
             'selectedSupplierId' => request('supplier_id'),
-            'defaultWarehouseId' => $warehouses->firstWhere('branche_id', $user->branche_id)?->id ?? $warehouses->first()?->id,
+            'branches' => Branch::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'defaultBranchId' => $user->branche_id,
+            'defaultWarehouseId' => $warehouses->first(fn ($w) => in_array((int) $user->branche_id, $w->branch_ids, true))?->id ?? $warehouses->first()?->id,
             'canCreateProduct' => $user->can('create', Product::class),
             'canCreateCategory' => $user->can('create', Category::class),
             'categories' => Category::orderBy('name')->get(['id', 'name']),

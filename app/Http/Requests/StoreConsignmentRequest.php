@@ -18,6 +18,7 @@ class StoreConsignmentRequest extends FormRequest
         return [
             'customer_id' => 'required|exists:customers,id',
             'warehouse_id' => 'required|exists:warehouses,id',
+            'branche_id' => 'nullable|exists:branches,id',
             'due_date' => 'nullable|date|after:today',
             'note' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',

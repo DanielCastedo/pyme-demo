@@ -28,7 +28,7 @@
         @endphp
 
         <x-ui.page-header category="Inventario" title="Almacenes"
-            description="Gestiona los almacenes de cada sucursal." :buttons="$buttons" />
+            description="Gestiona los almacenes y qué sucursales usa cada uno: uno por sucursal o uno compartido entre varias." :buttons="$buttons" />
 
         <div class="mb-5">
             <x-ui.search-box placeholder="Buscar por nombre o código..." filterName="buscar" />
@@ -38,7 +38,8 @@
             $columns = [
                 ['key' => 'name', 'label' => 'Nombre'],
                 ['key' => 'code', 'label' => 'Código'],
-                ['key' => 'branch.name', 'label' => 'Sucursal'],
+                ['key' => 'branch.name', 'label' => 'Sucursal dueña'],
+                ['key' => 'branch_names', 'label' => 'La usan'],
             ];
 
             $actions = [
@@ -57,9 +58,17 @@
                 [
                     'type' => 'select',
                     'name' => 'branche_id',
-                    'label' => 'Sucursal',
+                    'label' => 'Sucursal dueña',
                     'options' => $branches->pluck('name', 'id')->toArray(),
                     'required' => true,
+                ],
+                [
+                    'type' => 'checkbox-grid',
+                    'name' => 'branch_ids',
+                    'label' => 'Otras sucursales que lo usan',
+                    'options' => $branches->pluck('name', 'id')->toArray(),
+                    'help' => 'Marca las sucursales que comparten este stock. Déjalo vacío si es solo de la sucursal dueña.',
+                    'fullWidth' => true,
                 ],
                 [
                     'type' => 'text',

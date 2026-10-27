@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateWarehouseRequest;
 use App\Models\Branch;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -20,7 +21,7 @@ class WarehouseController extends Controller
     public function index(Request $request)
     {
         $warehouses = QueryBuilder::for(Warehouse::class)
-            ->with('branch')
+            ->with('branch', 'branches')
             ->allowedFilters([
                 AllowedFilter::callback('buscar', function ($query, $value) {
                     $query->where(function ($q) use ($value) {
@@ -44,7 +45,8 @@ class WarehouseController extends Controller
         $data = $request->validated();
         $data['is_active'] = $request->boolean('is_active', true);
 
-        $warehouse = Warehouse::create($data);
+        $warehouse = Warehouse::create(Arr::except($data, 'branch_ids'));
+        $this->syncBranches($warehouse, $data);
 
         return redirect()->route('warehouses.index')
             ->with('success', 'Almacén registrado exitosamente.')
@@ -53,7 +55,7 @@ class WarehouseController extends Controller
 
     public function show(Warehouse $warehouse)
     {
-        $warehouse->load('branch');
+        $warehouse->load('branch', 'branches');
 
         // Un almacén puede tener miles de productos: se muestran por páginas.
         $products = $warehouse->products()->orderBy('products.name')->paginate(30)->withQueryString();
@@ -73,7 +75,8 @@ class WarehouseController extends Controller
         $data = $request->validated();
         $data['is_active'] = $request->boolean('is_active', true);
 
-        $warehouse->update($data);
+        $warehouse->update(Arr::except($data, 'branch_ids'));
+        $this->syncBranches($warehouse, $data);
 
         return redirect()->route('warehouses.index')
             ->with('success', 'Almacén actualizado exitosamente.')
@@ -86,6 +89,15 @@ class WarehouseController extends Controller
 
         return redirect()->route('warehouses.index')
             ->with('success', 'Almacén eliminado exitosamente.');
+    }
+
+    /**
+     * Sucursales que usan el almacén: las marcadas en el formulario más la dueña, que siempre lo usa.
+     * Así se arma cualquier combinación: cada sucursal con su almacén, o dos o tres compartiendo uno.
+     */
+    private function syncBranches(Warehouse $warehouse, array $data): void
+    {
+        $warehouse->branches()->sync(collect($data['branch_ids'] ?? [])->push($warehouse->branche_id)->map(fn ($id) => (int) $id)->unique()->all());
     }
 
     /**

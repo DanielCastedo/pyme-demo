@@ -83,7 +83,7 @@
             <button type="button"
                 @click="sidebarOpen = true; sidebarExpanded = true"
                 class="shrink-0 w-9 h-9 rounded-lg overflow-hidden bg-white/10 ring-1 ring-white/10 flex items-center justify-center hover:ring-emerald-400/50 transition cursor-pointer">
-                <img src="/{{ config('app.logo') }}" alt="{{ config('app.name') }}" class="w-full h-full object-contain">
+                <img src="{{ $appLogoUrl }}" alt="{{ config('app.name') }}" class="w-full h-full object-contain">
             </button>
 
             <div class="min-w-0 flex-1 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">

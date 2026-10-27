@@ -6,25 +6,31 @@ use App\Models\Branch;
 use App\Models\Cashbox;
 use Illuminate\Database\Seeder;
 
+/**
+ * Una caja por sucursal: aunque Central y Norte compartan almacén, cada una cobra en su propia caja.
+ * Arrancan con un fondo de ejemplo para poder pagar compras y gastos.
+ */
 class CashboxSeeder extends Seeder
 {
     public function run(): void
     {
-        $branch = Branch::where('name', BranchSeeder::CENTRAL)->first() ?? Branch::first();
+        foreach ([
+            BranchSeeder::CENTRAL => ['Caja Principal', 5000],
+            BranchSeeder::NORTE => ['Caja Norte', 1000],
+            BranchSeeder::PLAN_3000 => ['Caja Plan 3000', 1000],
+        ] as $branchName => [$name, $fund]) {
+            $branch = Branch::where('name', $branchName)->first();
 
-        if (! $branch) {
-            $this->command->warn('No hay sucursales. Corre primero el BranchSeeder.');
+            if (! $branch) {
+                $this->command->warn("No existe la sucursal {$branchName}. Corre primero el BranchSeeder.");
 
-            return;
+                continue;
+            }
+
+            // firstOrCreate: si la caja ya existe no se le vuelve a poner el fondo.
+            Cashbox::firstOrCreate(['branche_id' => $branch->id, 'name' => $name], ['cash' => $fund, 'balance' => $fund]);
         }
 
-        // La caja arranca con un fondo de ejemplo (Bs 4.000) para poder pagar compras y gastos.
-        // firstOrCreate: si la caja ya existe no se le vuelve a poner el fondo.
-        Cashbox::firstOrCreate(
-            ['branche_id' => $branch->id, 'name' => 'Caja Principal'],
-            ['cash' => 4000, 'balance' => 4000]
-        );
-
-        $this->command->info('✅ Caja registradora creada correctamente.');
+        $this->command->info('✅ Cajas registradoras creadas correctamente.');
     }
 }

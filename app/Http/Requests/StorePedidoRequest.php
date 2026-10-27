@@ -18,6 +18,7 @@ class StorePedidoRequest extends FormRequest
         return [
             'customer_id' => 'nullable|exists:customers,id',
             'warehouse_id' => 'required|exists:warehouses,id',
+            'branche_id' => 'nullable|exists:branches,id',
             'delivery_date' => 'required|date|after_or_equal:today',
             'note' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',

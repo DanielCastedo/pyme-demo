@@ -36,7 +36,7 @@ class PurchaseService
     ) {}
 
     /**
-     * @param  array{warehouse_id: int, date?: mixed, supplier_id?: ?int, invoice_number?: ?string, note?: ?string, pay_now?: bool, payment_id?: ?int, cashbox_id?: ?int, payment_type?: ?string, due_date?: ?string, initial_payment?: float|string|null}  $data
+     * @param  array{warehouse_id: int, branche_id?: ?int, date?: mixed, supplier_id?: ?int, invoice_number?: ?string, note?: ?string, pay_now?: bool, payment_id?: ?int, cashbox_id?: ?int, payment_type?: ?string, due_date?: ?string, initial_payment?: float|string|null}  $data
      * @param  array<int, array{product_unit_id: int, quantity: float|string, unit_cost: float|string, distribution?: array<int, array{warehouse_id: int, quantity: int|string}>}>  $items
      *         Sin "distribution", todo el producto entra a warehouse_id (el almacén principal). Con "distribution",
      *         el reparto debe sumar exactamente la cantidad comprada.
@@ -47,6 +47,8 @@ class PurchaseService
     {
         return DB::transaction(function () use ($data, $items, $user) {
             $warehouse = Warehouse::findOrFail($data['warehouse_id']);
+            // La compra es de la sucursal que compra (el almacén puede ser compartido con otras sucursales).
+            $branchId = $warehouse->resolveBranchId($data['branche_id'] ?? null, ! empty($data['cashbox_id']) ? Cashbox::find($data['cashbox_id']) : null, $user);
             $supplier = ! empty($data['supplier_id']) ? Supplier::find($data['supplier_id']) : null;
             $date = ! empty($data['date']) ? \Carbon\Carbon::parse($data['date']) : now();
             if ($date->format('H:i:s') === '00:00:00') {
@@ -61,7 +63,7 @@ class PurchaseService
                 'amount' => 0,
                 'status' => Purchase::STATUS_RECEIVED,
                 'warehouse_id' => $warehouse->id,
-                'branche_id' => $warehouse->branche_id,
+                'branche_id' => $branchId,
                 'user_id' => $user->id,
                 'payment_type' => Purchase::PAYMENT_CASH,
                 'paid_amount' => 0,
@@ -73,7 +75,7 @@ class PurchaseService
             $purchase->amount = $total;
             $purchase->stock_movement_id = $mainMovementId;
 
-            $credit = $this->resolveCreditTerms($data, $total, $supplier, $warehouse, $user);
+            $credit = $this->resolveCreditTerms($data, $total, $supplier, $branchId, $user);
 
             if ($credit !== null) {
                 $purchase->payment_type = Purchase::PAYMENT_CREDIT;
@@ -282,7 +284,7 @@ class PurchaseService
      *
      * @throws \RuntimeException
      */
-    private function resolveCreditTerms(array $data, string $total, ?Supplier $supplier, Warehouse $warehouse, User $user): ?array
+    private function resolveCreditTerms(array $data, string $total, ?Supplier $supplier, int $branchId, User $user): ?array
     {
         if (($data['payment_type'] ?? Purchase::PAYMENT_CASH) !== Purchase::PAYMENT_CREDIT) {
             return null;
@@ -315,8 +317,8 @@ class PurchaseService
                 throw new \RuntimeException('Selecciona el método de pago y la caja donde se paga el anticipo.');
             }
 
-            if ((int) $cashbox->branche_id !== (int) $warehouse->branche_id) {
-                throw new \RuntimeException('La caja y el almacén elegidos no son de la misma sucursal.');
+            if ((int) $cashbox->branche_id !== $branchId) {
+                throw new \RuntimeException('La caja elegida no es de la sucursal que hace la compra.');
             }
         }
 

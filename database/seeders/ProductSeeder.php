@@ -8,33 +8,32 @@ use App\Models\Unit;
 use Illuminate\Database\Seeder;
 
 /**
- * Siete productos de farmacia, cada uno para explicar algo distinto:
- *  - Ambroxol:     producto simple (dos entradas a distinto costo → se ve el FIFO).
- *  - Paracetamol:  se vende por tableta suelta o en "Caja x100" (ver ProductUnitSeeder).
- *  - Gasa, Alcohol y Botiquín: el Botiquín es un kit armado con gasas + alcohol + paracetamol (ver ProductComponentSeeder).
- *  - Amoxicilina:  queda con poco stock para que aparezca la alerta de stock mínimo.
- *  - Vitamina C:   producto de la categoría con promoción (ver PromotionSeeder).
- *
- * "marca" guarda el laboratorio y "medida" la concentración / presentación.
+ * Siete productos de ferretería, cada uno para explicar algo distinto:
+ *  - Martillo:      producto simple (dos entradas a distinto costo → se ve el FIFO).
+ *  - Tornillo:      se vende suelto o en "Caja x100" (ver ProductUnitSeeder).
+ *  - Destornillador, Alicate y Juego de herramientas: el juego es un kit armado con
+ *                   2 destornilladores + 1 alicate + 20 tornillos (ver ProductComponentSeeder).
+ *  - Taladro:       queda con poco stock para que aparezca la alerta de stock mínimo.
+ *  - Pintura látex: producto de la categoría con promoción (ver PromotionSeeder).
  */
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
         foreach ([
-            ['MED-0001', 'Paracetamol 500mg', 'Analgésicos y Antipiréticos', 'Tableta', 0.50, 'Se vende por tableta suelta o en caja de 100.', 'Laboratorios Bagó', '500mg'],
-            ['MED-0002', 'Ambroxol jarabe adulto 120ml', 'Respiratorios y Antigripales', 'Frasco', 35, 'Expectorante. 30mg/5ml.', 'Laboratorios INTI', '120ml'],
-            ['MED-0003', 'Amoxicilina suspensión 250mg/5ml', 'Antibióticos', 'Frasco', 45, 'Venta con receta médica. Polvo para reconstituir.', 'Laboratorios Vita', '60ml'],
-            ['CUR-0001', 'Gasa estéril 10x10cm', 'Material de Curación', 'Sobre', 3, 'Sobre individual estéril.', null, '10x10cm'],
-            ['CUR-0002', 'Alcohol antiséptico 70% 250ml', 'Material de Curación', 'Frasco', 15, 'Alcohol etílico al 70%.', null, '250ml'],
-            ['CUR-0003', 'Botiquín de primeros auxilios', 'Material de Curación', 'Unidad', 60, 'Kit: 4 gasas + 1 alcohol 250ml + 8 tabletas de paracetamol.', null, 'Básico'],
-            ['VIT-0001', 'Vitamina C 1g efervescente x10', 'Vitaminas y Suplementos', 'Tubo', 25, 'Tubo de 10 tabletas efervescentes.', 'Laboratorios Bagó', '1g'],
-        ] as [$sku, $name, $category, $unitName, $price, $description, $laboratorio, $medida]) {
+            ['TOR-0001', 'Tornillo autorroscante 8 x 1"', 'Tornillería y Fijaciones', 'Unidad', 0.30, 'Punta broca, cabeza Phillips. Se vende suelto o en caja de 100.', 'Fixser', '8 x 1"', 'Zincado'],
+            ['HMA-0001', 'Martillo de uña 16 oz', 'Herramientas Manuales', 'Unidad', 75, 'Mango de fibra de vidrio antivibración.', 'Stanley', '16 oz', 'Amarillo'],
+            ['HEL-0001', 'Taladro percutor 650W 13mm', 'Herramientas Eléctricas', 'Unidad', 520, 'Velocidad variable y reversible. Incluye maletín.', 'Bosch', '13mm', 'Azul'],
+            ['HMA-0002', 'Destornillador plano 6"', 'Herramientas Manuales', 'Pieza', 18, 'Punta imantada, mango ergonómico.', 'Truper', '6"', null],
+            ['HMA-0003', 'Alicate universal 8"', 'Herramientas Manuales', 'Pieza', 45, 'Acero al cromo vanadio, mango aislado.', 'Truper', '8"', 'Rojo'],
+            ['KIT-0001', 'Juego de herramientas básico para el hogar', 'Herramientas Manuales', 'Juego', 150, 'Kit: 2 destornilladores + 1 alicate + 20 tornillos.', null, 'Básico', null],
+            ['PIN-0001', 'Pintura látex interior blanco', 'Pinturas y Accesorios', 'Galón', 95, 'Lavable, acabado mate. Rinde 35 m² por galón.', 'Monopol', '1 galón', 'Blanco'],
+        ] as [$sku, $name, $category, $unitName, $price, $description, $marca, $medida, $color]) {
             $product = Product::updateOrCreate(['sku' => $sku], [
                 'name' => $name,
                 'description' => $description,
-                'marca' => $laboratorio,
-                'color' => null,
+                'marca' => $marca,
+                'color' => $color,
                 'medida' => $medida,
                 'category_id' => Category::where('name', $category)->firstOrFail()->id,
                 'is_active' => true,

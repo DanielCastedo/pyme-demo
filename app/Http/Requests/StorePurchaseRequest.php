@@ -24,6 +24,7 @@ class StorePurchaseRequest extends FormRequest
     {
         return [
             'warehouse_id' => 'required|exists:warehouses,id',
+            'branche_id' => 'nullable|exists:branches,id',
             'date' => 'nullable|date|before_or_equal:today',
             'supplier_id' => 'nullable|required_if:payment_type,credit|exists:suppliers,id',
             'invoice_number' => 'nullable|string|max:100',

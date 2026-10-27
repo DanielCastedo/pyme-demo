@@ -24,8 +24,8 @@ class ExpenseSeeder extends Seeder
         }
 
         foreach ([
-            ['Pago de energía eléctrica (incluye refrigerador de medicamentos)', 250, 'Servicios básicos (luz, agua, internet)', 12, 'FAC-948201'],
-            ['Renovación de permiso de funcionamiento sanitario', 150, 'Permisos y trámites sanitarios', 8, 'REC-2026-0451'],
+            ['Pago de energía eléctrica del local central', 250, 'Servicios básicos (luz, agua, internet)', 12, 'FAC-948201'],
+            ['Flete de mercadería desde el puerto seco', 300, 'Transporte y fletes', 8, 'REC-2026-0451'],
         ] as [$concept, $amount, $category, $daysAgo, $receipt]) {
             $expenses->register([
                 'date' => now()->subDays($daysAgo)->toDateString(),
@@ -38,6 +38,6 @@ class ExpenseSeeder extends Seeder
             ], $this->admin());
         }
 
-        $this->command->info('✅ Gastos de ejemplo registrados (Bs 400 en total).');
+        $this->command->info('✅ Gastos de ejemplo registrados (Bs 550 en total).');
     }
 }

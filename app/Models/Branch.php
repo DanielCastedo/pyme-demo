@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
@@ -68,9 +69,16 @@ class Branch extends Model
         return $this->hasMany(Cashbox::class, 'branche_id');
     }
 
+    /** Almacenes de los que es dueña. */
     public function warehouses(): HasMany
     {
         return $this->hasMany(Warehouse::class, 'branche_id');
+    }
+
+    /** Almacenes que usa (los suyos y los compartidos con otras sucursales). */
+    public function usableWarehouses(): BelongsToMany
+    {
+        return $this->belongsToMany(Warehouse::class, 'branch_warehouse', 'branch_id', 'warehouse_id')->withTimestamps();
     }
 
     public function transactions(): HasMany

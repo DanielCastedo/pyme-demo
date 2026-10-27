@@ -2,6 +2,7 @@
 
 namespace Database\Seeders\Concerns;
 
+use App\Models\Branch;
 use App\Models\Cashbox;
 use App\Models\Customer;
 use App\Models\PaymentMethod;
@@ -22,15 +23,21 @@ trait UsesDemoData
         return User::where('email', 'admin@gmail.com')->firstOrFail();
     }
 
-    protected function warehouse(): Warehouse
+    /** Por defecto el Almacén Central (compartido por las sucursales Central y Norte). */
+    protected function warehouse(string $code = 'ALM-CEN'): Warehouse
     {
-        return Warehouse::where('code', 'ALM-CEN')->firstOrFail();
+        return Warehouse::where('code', $code)->firstOrFail();
     }
 
-    /** La caja de la misma sucursal del almacén. */
-    protected function cashbox(): Cashbox
+    /** La caja de una sucursal (por defecto la de la sucursal dueña del Almacén Central). */
+    protected function cashbox(?Branch $branch = null): Cashbox
     {
-        return Cashbox::where('branche_id', $this->warehouse()->branche_id)->firstOrFail();
+        return Cashbox::where('branche_id', $branch->id ?? $this->warehouse()->branche_id)->firstOrFail();
+    }
+
+    protected function branch(string $name): Branch
+    {
+        return Branch::where('name', $name)->firstOrFail();
     }
 
     protected function cash(): PaymentMethod

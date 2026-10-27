@@ -3,7 +3,7 @@
 
         {{-- Logo y Empresa --}}
         <div class="text-center mb-6">
-            <img class="mx-auto h-14 w-auto object-contain mb-3" src="/{{ config('app.logo') }}" alt="{{ $company?->name }}">
+            <img class="mx-auto h-14 w-auto object-contain mb-3" src="{{ $appLogoUrl }}" alt="{{ $company?->name }}">
             <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 {{ $company?->name ?? 'Sistema de Gestión y Punto de Venta' }}
             </h1>

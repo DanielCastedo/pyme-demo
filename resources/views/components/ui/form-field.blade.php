@@ -229,7 +229,7 @@
                 class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-48 overflow-y-auto p-2 border border-gray-200 dark:border-gray-700 rounded-lg">
                 @foreach ($options as $optionValue => $optionLabel)
                     <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" name="{{ $name }}[]" value="{{ $optionValue }}"
+                        <input type="checkbox" name="{{ $name }}[]" value="{{ $optionValue }}" @checked(in_array((string) $optionValue, array_map('strval', (array) $value), true))
                             class="rounded border-gray-300 text-emerald-600 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50">
                         <span class="text-sm text-gray-700 dark:text-gray-300">{{ $optionLabel }}</span>
                     </label>

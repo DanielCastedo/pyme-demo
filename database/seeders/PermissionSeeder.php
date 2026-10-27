@@ -15,7 +15,7 @@ class PermissionSeeder extends Seeder
         // Limpiar la caché de Spatie antes de empezar (obligatorio)
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Módulos del sistema de la farmacia
+        // Módulos del sistema de la ferretería
         $modulos = [
             'usuarios', 'roles', 'permisos', 'role-permisos', 'menus', 'sidebars',
             'companies', 'subscriptions', 'products', 'product-categories', 'inventory-movements',

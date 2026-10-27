@@ -209,13 +209,24 @@
                         <input type="text" name="invoice_number" value="{{ old('invoice_number') }}" placeholder="Ej. FAC-0001" class="{{ $field }}">
                     </div>
                     @endif
+                    @unless ($editing)
+                    {{-- Sucursal que compra: solo se listan los almacenes que usa (propios o compartidos) y sus cajas --}}
+                    <div>
+                        <label class="{{ $label }}">Sucursal *</label>
+                        <select name="branche_id" id="branch-id" class="{{ $field }}">
+                            @foreach ($branches as $b)
+                                <option value="{{ $b->id }}" @selected(old('branche_id', $defaultBranchId) == $b->id)>{{ $b->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endunless
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {{-- Se oculta cuando se distribuye en almacenes: los destinos salen del reparto de cada producto --}}
                         <div id="warehouse-field" @class(['col-span-2' => $editing])>
                             <label class="{{ $label }}">Almacén *</label>
                             <select name="warehouse_id" id="warehouse-id" class="{{ $field }}">
                                 @foreach ($warehouses as $w)
-                                    <option value="{{ $w->id }}" data-branch="{{ $w->branche_id }}" @selected(old('warehouse_id', $defaultWarehouseId) == $w->id)>{{ $w->name }}</option>
+                                    <option value="{{ $w->id }}" data-branch="{{ $w->branche_id }}" data-branches="{{ implode(',', $w->branch_ids) }}" @selected(old('warehouse_id', $defaultWarehouseId) == $w->id)>{{ $w->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -758,11 +769,21 @@
             });
             document.addEventListener('click', (e) => { if (!results.contains(e.target) && e.target !== search) results.classList.add('hidden'); });
 
-            // ── Pago desde caja: solo las cajas de la sucursal del almacén ──
-            const wh = $('warehouse-id'), cb = $('cashbox-id');
+            // ── Sucursal → almacenes que usa (propios o compartidos) y sus cajas ──
+            const wh = $('warehouse-id'), cb = $('cashbox-id'), branchSel = $('branch-id');
+            function syncWarehouses() {
+                if (!branchSel) return;
+                let firstVisible = null;
+                [...wh.options].forEach((o) => {
+                    const show = o.dataset.branches.split(',').includes(branchSel.value);
+                    o.hidden = !show; o.disabled = !show;
+                    if (show && !firstVisible) firstVisible = o;
+                });
+                if (wh.selectedOptions[0]?.disabled && firstVisible) wh.value = firstVisible.value;
+            }
             function syncCashboxes() {
                 // Al distribuir hay varios destinos (posiblemente de varias sucursales): se pueden usar todas las cajas.
-                const branch = distributing ? null : wh.selectedOptions[0]?.dataset.branch;
+                const branch = distributing ? null : (branchSel ? branchSel.value : wh.selectedOptions[0]?.dataset.branch);
                 let firstVisible = null;
                 [...cb.options].forEach((o) => {
                     const show = branch === null || o.dataset.branch === branch;
@@ -772,6 +793,8 @@
                 if (cb.selectedOptions[0]?.disabled && firstVisible) cb.value = firstVisible.value;
             }
             wh.addEventListener('change', syncCashboxes);
+            branchSel?.addEventListener('change', () => { syncWarehouses(); syncCashboxes(); });
+            syncWarehouses();
 
             // ── Contado / Crédito ──
             const payType = $('payment-type');

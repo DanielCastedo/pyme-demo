@@ -2,7 +2,8 @@
     $items = [
         ['label' => 'Nombre', 'value' => $warehouse->name],
         ['label' => 'Código', 'value' => $warehouse->code, 'mono' => true],
-        ['label' => 'Sucursal', 'value' => $warehouse->branch->name ?? '—'],
+        ['label' => 'Sucursal dueña', 'value' => $warehouse->branch->name ?? '—'],
+        ['label' => 'Sucursales que lo usan', 'value' => $warehouse->branch_names],
         ['label' => 'Estado', 'value' => $warehouse->is_active ? 'Activo' : 'Inactivo'],
     ];
 @endphp

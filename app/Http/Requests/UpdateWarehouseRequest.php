@@ -18,6 +18,8 @@ class UpdateWarehouseRequest extends FormRequest
 
         return [
             'branche_id' => 'required|exists:branches,id',
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => 'integer|exists:branches,id',
             'name' => 'required|string|max:255',
             'code' => ['required', 'string', 'max:100', Rule::unique('warehouses', 'code')->ignore($warehouseId)],
             'is_active' => 'nullable|boolean',

@@ -3,10 +3,19 @@
         [
             'type' => 'select',
             'name' => 'branche_id',
-            'label' => 'Sucursal',
+            'label' => 'Sucursal dueña',
             'value' => $warehouse->branche_id,
             'options' => $branches->pluck('name', 'id')->toArray(),
             'required' => true,
+            'fullWidth' => true,
+        ],
+        [
+            'type' => 'checkbox_group',
+            'name' => 'branch_ids',
+            'label' => 'Sucursales que usan este almacén',
+            'value' => $warehouse->branchIds(),
+            'options' => $branches->pluck('name', 'id')->toArray(),
+            'help' => 'Marca varias si comparten el mismo stock (venden, compran y hacen pedidos de este almacén). La sucursal dueña siempre queda incluida.',
             'fullWidth' => true,
         ],
         [

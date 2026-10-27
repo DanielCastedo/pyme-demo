@@ -22,25 +22,25 @@ class QuotationSeeder extends Seeder
         $cotizaciones = [
             [
                 'number' => 'COT-0001',
-                'customer_name' => 'Clínica San Lucas S.R.L.',
+                'customer_name' => 'Constructora Andina S.R.L.',
                 'customer_document' => '1023456029',
                 'customer_phone' => '3-3221100',
-                'notes' => 'Proforma de material de curación para el área de emergencias.',
+                'notes' => 'Proforma de herramientas para la cuadrilla de la obra.',
                 'items' => [
-                    ['sku' => 'CUR-0001', 'quantity' => 50],
-                    ['sku' => 'CUR-0002', 'quantity' => 12],
-                    ['sku' => 'CUR-0003', 'quantity' => 5],
+                    ['sku' => 'HMA-0002', 'quantity' => 20],
+                    ['sku' => 'HMA-0003', 'quantity' => 10],
+                    ['sku' => 'KIT-0001', 'quantity' => 5],
                 ],
             ],
             [
                 'number' => 'COT-0002',
-                'customer_name' => 'Consultorio Dra. María Fernández',
+                'customer_name' => 'Pedro Gutiérrez (Maestro de obra)',
                 'customer_document' => '7788990',
                 'customer_phone' => '76543210',
-                'notes' => 'Proforma de medicamentos para el consultorio.',
+                'notes' => 'Proforma de martillos y pintura para una obra.',
                 'items' => [
-                    ['sku' => 'MED-0002', 'quantity' => 6],
-                    ['sku' => 'VIT-0001', 'quantity' => 10],
+                    ['sku' => 'HMA-0001', 'quantity' => 6],
+                    ['sku' => 'PIN-0001', 'quantity' => 10],
                 ],
             ],
         ];

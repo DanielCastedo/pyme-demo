@@ -32,7 +32,7 @@ class OrderService
                 'user_id' => $user->id,
                 'customer_id' => $data['customer_id'] ?? null,
                 'warehouse_id' => $warehouse->id,
-                'branche_id' => $warehouse->branche_id,
+                'branche_id' => $warehouse->resolveBranchId($data['branche_id'] ?? null, null, $user),
                 'date' => now()->toDateString(),
                 'delivery_date' => $data['delivery_date'],
                 'memo' => $data['note'] ?? null,
@@ -68,7 +68,7 @@ class OrderService
             $order->update([
                 'customer_id' => $data['customer_id'] ?? null,
                 'warehouse_id' => $warehouse->id,
-                'branche_id' => $warehouse->branche_id,
+                'branche_id' => $warehouse->resolveBranchId($data['branche_id'] ?? null, null, $user),
                 'delivery_date' => $data['delivery_date'],
                 'memo' => $data['note'] ?? null,
                 'amount' => Bc::round(Bc::sum(array_column($lines, 'subtotal')), 2),
