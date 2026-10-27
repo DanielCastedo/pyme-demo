@@ -20,7 +20,6 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemoController;
-use App\Http\Controllers\DeployController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PermisosController;
@@ -91,9 +90,6 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('/suscripcion/planes', [SubscriptionController::class, 'plans'])->name('subscriptions.plans');
-
-// Endpoint de deploy (protegido por token, no por sesión)
-Route::get('/deploy/optimize', [DeployController::class, 'optimize'])->name('deploy.optimize');
 
 // Endpoint de versión de la app (para el aviso de actualización pendiente)
 Route::get('/api/app-version', function () {

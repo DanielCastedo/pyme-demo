@@ -17,27 +17,6 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 
-    <style>
-        #particles-js {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .app-layout,
-        .flex.h-\[100dvh\] {
-            position: relative;
-            z-index: 1;
-        }
-
-        body {
-            position: relative;
-        }
-    </style>
-
     <script>
         if (localStorage.getItem('dark-mode') === 'false' || !('dark-mode' in localStorage)) {
             document.querySelector('html').classList.remove('dark');
@@ -64,7 +43,6 @@
 
     <!-- Page wrapper -->
     <div class="flex h-[100dvh] overflow-hidden relative app-layout">
-        <div id="particles-js"></div>
         <x-app.sidebar />
         <div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden @if ($attributes['background']) {{ $attributes['background'] }} @endif"
             x-ref="contentarea">
@@ -78,13 +56,6 @@
 
     @livewireScripts
     @stack('scripts')
-
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-    <script>
-        particlesJS.load('particles-js',
-            'https://raw.githubusercontent.com/VincentGarreau/particles.js/master/demo/particles.json',
-            function() {});
-    </script>
 
     <x-update-banner />
     <x-pwa-install />
