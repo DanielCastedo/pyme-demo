@@ -26,7 +26,7 @@ it('exige estar autenticado', function () {
 });
 
 it('nunca devuelve más de 15 resultados, aunque haya muchos más productos', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     Product::factory()->count(20)->create()->each(function ($p) {
         ProductUnit::factory()->create(['product_id' => $p->id, 'is_base' => true, 'factor' => 1]);
@@ -38,7 +38,7 @@ it('nunca devuelve más de 15 resultados, aunque haya muchos más productos', fu
 });
 
 it('busca por nombre, SKU, código de barras, marca, color y medida', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     $product = Product::factory()->create(['name' => 'Martillo de uña', 'sku' => 'HM-0001', 'marca' => 'Stanley', 'color' => 'Rojo', 'medida' => '16oz']);
     $unit = ProductUnit::factory()->create(['product_id' => $product->id, 'is_base' => true, 'factor' => 1, 'barcode' => '7591234567890']);
@@ -52,7 +52,7 @@ it('busca por nombre, SKU, código de barras, marca, color y medida', function (
 });
 
 it('sin filtros devuelve los primeros del catálogo (para el buscador vacío al enfocar)', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     Product::factory()->count(3)->create()->each(fn ($p) => ProductUnit::factory()->create(['product_id' => $p->id, 'is_base' => true]));
 
@@ -62,7 +62,7 @@ it('sin filtros devuelve los primeros del catálogo (para el buscador vacío al 
 });
 
 it('busca por código exacto (barcode o SKU) y devuelve como mucho uno', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     $product = Product::factory()->create(['sku' => 'FG-0001']);
     $unit = ProductUnit::factory()->create(['product_id' => $product->id, 'is_base' => true, 'barcode' => '7770001112223']);
@@ -79,7 +79,7 @@ it('busca por código exacto (barcode o SKU) y devuelve como mucho uno', functio
 });
 
 it('busca por ids puntuales sin limitarse a 15 (para redibujar líneas ya elegidas)', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     $units = Product::factory()->count(3)->create()->map(fn ($p) => ProductUnit::factory()->create(['product_id' => $p->id, 'is_base' => true]));
 
@@ -89,7 +89,7 @@ it('busca por ids puntuales sin limitarse a 15 (para redibujar líneas ya elegid
 });
 
 it('devuelve el stock y el costo por almacén de cada producto', function () {
-    $this->actingAs(userWith('ventas.editar-precio'));
+    $this->actingAs(userWith('ver sales', 'ventas.editar-precio'));
 
     $product = Product::factory()->create();
     $unit = ProductUnit::factory()->create(['product_id' => $product->id, 'is_base' => true, 'factor' => 1]);
@@ -102,7 +102,7 @@ it('devuelve el stock y el costo por almacén de cada producto', function () {
 });
 
 it('un kit calcula su stock como lo que alcanzan sus componentes, y su costo como la suma de las partes', function () {
-    $this->actingAs(userWith('ventas.editar-precio'));
+    $this->actingAs(userWith('ver sales', 'ventas.editar-precio'));
 
     $pata = Product::factory()->create();
     $tablero = Product::factory()->create();
@@ -125,7 +125,7 @@ it('un kit calcula su stock como lo que alcanzan sus componentes, y su costo com
 });
 
 it('incluye las presentaciones hermanas del mismo producto (para el desglose de stock)', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     $product = Product::factory()->create();
     $pieza = ProductUnit::factory()->create(['product_id' => $product->id, 'is_base' => true, 'name' => 'Unidad', 'factor' => 1]);
@@ -138,7 +138,7 @@ it('incluye las presentaciones hermanas del mismo producto (para el desglose de 
 });
 
 it('un producto inactivo no aparece en la búsqueda', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     $product = Product::factory()->create(['name' => 'Producto Inactivo', 'is_active' => false]);
     ProductUnit::factory()->create(['product_id' => $product->id, 'is_base' => true]);
@@ -160,8 +160,22 @@ it('el buscador de clientes exige estar autenticado', function () {
     $this->get(route('pos.customers.search'))->assertRedirect(route('login'));
 });
 
-it('nunca devuelve más de 15 clientes, aunque haya muchos más', function () {
+it('los buscadores exigen acceso a Ventas, Pedidos, Consignaciones o Proformas', function () {
     $this->actingAs(userWith());
+
+    $this->getJson(route('pos.products.search'))->assertForbidden();
+    $this->getJson(route('pos.customers.search'))->assertForbidden();
+
+    foreach (['ver orders', 'ver consignments', 'ver quotations'] as $permission) {
+        $this->actingAs(userWith($permission));
+
+        $this->getJson(route('pos.products.search'))->assertOk();
+        $this->getJson(route('pos.customers.search'))->assertOk();
+    }
+});
+
+it('nunca devuelve más de 15 clientes, aunque haya muchos más', function () {
+    $this->actingAs(userWith('ver sales'));
 
     Customer::factory()->count(20)->create(['is_active' => true]);
 
@@ -171,7 +185,7 @@ it('nunca devuelve más de 15 clientes, aunque haya muchos más', function () {
 });
 
 it('busca clientes por nombre o documento', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     $customer = Customer::factory()->create(['name' => 'Constructora Andina', 'document' => '1023456029']);
     $other = Customer::factory()->create(['name' => 'Otro Cliente']);
@@ -183,7 +197,7 @@ it('busca clientes por nombre o documento', function () {
 });
 
 it('busca por ids puntuales sin limitarse a 15 (para restaurar el cliente ya elegido)', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     $customers = Customer::factory()->count(3)->create();
 
@@ -193,7 +207,7 @@ it('busca por ids puntuales sin limitarse a 15 (para restaurar el cliente ya ele
 });
 
 it('trae la deuda actual del cliente por sus ventas a crédito vigentes, solo de los clientes encontrados', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     $customer = Customer::factory()->create(['credit_limit' => 500]);
     orderFor($customer, ['payment_type' => Order::PAYMENT_CREDIT, 'amount' => 300, 'paid_amount' => 100]);
@@ -205,7 +219,7 @@ it('trae la deuda actual del cliente por sus ventas a crédito vigentes, solo de
 });
 
 it('un cliente inactivo no aparece en la búsqueda', function () {
-    $this->actingAs(userWith());
+    $this->actingAs(userWith('ver sales'));
 
     Customer::factory()->create(['name' => 'Cliente Inactivo', 'is_active' => false]);
 

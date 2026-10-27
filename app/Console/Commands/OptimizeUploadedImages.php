@@ -57,7 +57,7 @@ class OptimizeUploadedImages extends Command
                     $originalSize = filesize($absolute);
 
                     try {
-                        [$bytes, $extension] = $optimizer->optimizeFile($absolute, $preset, $column, pathinfo($path, PATHINFO_EXTENSION));
+                        [$bytes, $extension] = $optimizer->optimizeFile($absolute, $preset, $column);
                     } catch (ValidationException $e) {
                         $this->warn("[{$table}.{$column} #{$row->id}] omitida: ".collect($e->errors())->flatten()->first());
 

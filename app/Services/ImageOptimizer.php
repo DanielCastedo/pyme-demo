@@ -37,7 +37,7 @@ class ImageOptimizer
      */
     public function store(UploadedFile $file, string $directory, string $preset = 'photo', string $disk = 'uploads', string $field = 'image', ?string $name = null): string
     {
-        [$bytes, $extension] = $this->optimizeFile($file->getRealPath(), $preset, $field, $file->getClientOriginalExtension());
+        [$bytes, $extension] = $this->optimizeFile($file->getRealPath(), $preset, $field);
 
         $path = trim($directory, '/').'/'.($name !== null ? $name : Str::random(40)).'.'.$extension;
 
@@ -52,7 +52,7 @@ class ImageOptimizer
      */
     public function optimizeUpload(UploadedFile $file, string $preset = 'photo', string $field = 'photo'): UploadedFile
     {
-        [$bytes, $extension] = $this->optimizeFile($file->getRealPath(), $preset, $field, $file->getClientOriginalExtension());
+        [$bytes, $extension] = $this->optimizeFile($file->getRealPath(), $preset, $field);
 
         $tmp = tempnam(sys_get_temp_dir(), 'img');
         file_put_contents($tmp, $bytes);
@@ -64,20 +64,46 @@ class ImageOptimizer
     }
 
     /**
-     * Núcleo: lee el archivo y devuelve [bytes, extensión]. Si no se puede procesar como
-     * imagen soportada, devuelve el original sin tocar.
+     * Extensión según el contenido real del archivo (no según el nombre que mandó el cliente), o null si
+     * no es una imagen admitida. Las imágenes se sirven desde public/uploads: con la extensión del cliente,
+     * un archivo que pasa la validación pero se llama .html, .svg o .php quedaría publicado tal cual.
+     */
+    public function detectExtension(string $path): ?string
+    {
+        $info = @getimagesize($path);
+
+        return match ($info[2] ?? null) {
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+            IMAGETYPE_GIF => 'gif',
+            default => null,
+        };
+    }
+
+    /**
+     * Núcleo: lee el archivo y devuelve [bytes, extensión]. Si no se puede recomprimir, devuelve el
+     * original sin tocar; si ni siquiera es una imagen admitida, lo rechaza.
      *
      * @return array{0: string, 1: string}
      */
-    public function optimizeFile(string $path, string $preset = 'photo', string $field = 'image', string $fallbackExtension = 'jpg'): array
+    public function optimizeFile(string $path, string $preset = 'photo', string $field = 'image'): array
     {
+        $originalExtension = $this->detectExtension($path);
+
+        if ($originalExtension === null) {
+            throw ValidationException::withMessages([
+                $field => 'El archivo no es una imagen válida (JPG, PNG o WEBP).',
+            ]);
+        }
+
         $original = file_get_contents($path);
         $settings = self::PRESETS[$preset] ?? self::PRESETS['photo'];
 
         $info = @getimagesize($path);
 
-        if (! $info || ! in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {
-            return [$original, strtolower($fallbackExtension) ?: 'jpg'];
+        if (! in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP], true)) {
+            return [$original, $originalExtension];
         }
 
         [$width, $height] = $info;
@@ -97,7 +123,7 @@ class ImageOptimizer
         };
 
         if (! $image) {
-            return [$original, strtolower($fallbackExtension) ?: 'jpg'];
+            return [$original, $originalExtension];
         }
 
         $changed = false;
@@ -135,7 +161,7 @@ class ImageOptimizer
 
         // Si recomprimir no ayudó (imagen ya chica/optimizada) se deja el original tal cual.
         if (! $changed && strlen($webp) >= strlen($original)) {
-            return [$original, strtolower($fallbackExtension) ?: 'jpg'];
+            return [$original, $originalExtension];
         }
 
         return [$webp, 'webp'];

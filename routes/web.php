@@ -80,11 +80,6 @@ Route::post('/demo/restablecer', [DemoController::class, 'reset'])
     ->middleware(['guest', 'throttle:3,10'])
     ->name('demo.reset');
 
-Route::controller(AuthController::class)->group(function () {
-    Route::get('/registrar', 'create')->name('auth.create');
-    Route::post('/registrar', 'store')->name('auth.store');
-});
-
 // /verificar: la vista "verificador.index" no existe y la clase se llama "verificarController" (minúscula) en su archivo,
 // lo que falla en servidores Linux. Se reactiva cuando se rehaga esa pantalla.
 
@@ -111,10 +106,14 @@ Route::get('/api/app-version', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/suscripcion/vencida', [SubscriptionController::class, 'expired'])->name('subscriptions.expired');
     Route::get('/suscripcion', [SubscriptionController::class, 'index'])->name('subscriptions.index');
-    Route::post('/suscripcion/suscribir', [SubscriptionController::class, 'subscribe'])->name('subscriptions.subscribe');
-    Route::post('/suscripcion/cancelar', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
-    Route::get('/suscripcion/facturas', [SubscriptionController::class, 'invoices'])->name('subscriptions.invoices');
-    Route::get('/facturas/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+
+    // Solicitar, cancelar y ver facturas afecta a toda la empresa: solo administradores.
+    Route::middleware(['role:admin|superadmin'])->group(function () {
+        Route::post('/suscripcion/suscribir', [SubscriptionController::class, 'subscribe'])->name('subscriptions.subscribe');
+        Route::post('/suscripcion/cancelar', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+        Route::get('/suscripcion/facturas', [SubscriptionController::class, 'invoices'])->name('subscriptions.invoices');
+        Route::get('/facturas/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    });
 
     Route::middleware(['role:admin|superadmin'])->group(function () {
         Route::get('/suscripcion/pendientes', [SubscriptionController::class, 'pending'])->name('subscriptions.pending');
@@ -190,10 +189,11 @@ Route::middleware(['auth:sanctum', 'verified', 'subscription', 'terms'])->group(
     });
 
     // ── POS: buscador de productos compartido por Ventas, Pedidos y Consignaciones ─────────
-    // Sin permiso propio: cualquiera de esas 3 pantallas ya está protegida con el suyo, y este
-    // buscador no muestra nada que esas pantallas no muestren ya.
-    Route::get('pos/products/search', [PosSearchController::class, 'search'])->name('pos.products.search');
-    Route::get('pos/customers/search', [PosSearchController::class, 'searchCustomers'])->name('pos.customers.search');
+    // Basta con tener acceso a alguna de las pantallas que lo usan (Ventas, Pedidos, Consignaciones o Proformas).
+    Route::middleware(['permission:ver sales|ver orders|ver consignments|ver quotations'])->group(function () {
+        Route::get('pos/products/search', [PosSearchController::class, 'search'])->name('pos.products.search');
+        Route::get('pos/customers/search', [PosSearchController::class, 'searchCustomers'])->name('pos.customers.search');
+    });
 
     // ── Ventas: registro rápido de ventas (orden + stock FIFO + cobro en caja) ─────────
     Route::middleware(['permission:ver sales'])->group(function () {

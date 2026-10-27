@@ -479,7 +479,13 @@ class GeneralProductsImport
 
         try {
             file_put_contents($tmp, $photo['bytes']);
-            [$bytes, $extension] = $this->images->optimizeFile($tmp, 'photo', 'photo', $photo['extension']);
+
+            // Un dibujo incrustado que no es imagen (EMF, SVG...) no se publica: el producto queda sin foto.
+            if ($this->images->detectExtension($tmp) === null) {
+                return;
+            }
+
+            [$bytes, $extension] = $this->images->optimizeFile($tmp, 'photo', 'photo');
 
             // Igual que al crear/editar un producto desde el CRUD: el nombre del archivo es el ID del producto.
             $path = 'products/'.$product->id.'.'.$extension;

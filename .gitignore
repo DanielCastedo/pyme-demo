@@ -16,6 +16,7 @@ auth.json
 # Viven en el servidor, no en el repositorio. Se conserva la carpeta con .gitkeep.
 /public/uploads/*
 !/public/uploads/.gitkeep
+!/public/uploads/.htaccess
 /public/storage
 /storage/*.key
 

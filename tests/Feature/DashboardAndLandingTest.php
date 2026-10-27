@@ -117,7 +117,7 @@ describe('DashboardController', function () {
 
 describe('InvoiceController', function () {
     it('muestra el detalle de una factura generada para la suscripción', function () {
-        $user = userWith();
+        $user = superAdminUser();
         $plan = SubscriptionPlan::factory()->create(['price' => 100]);
         $sub = Subscription::create([
             'company_id' => 1,

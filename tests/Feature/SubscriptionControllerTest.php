@@ -59,8 +59,8 @@ describe('planes públicos y suscripción de usuario', function () {
             ->assertSee('Plan Pro');
     });
 
-    it('permite a un usuario solicitar una nueva suscripción', function () {
-        $user = userWith();
+    it('permite a un administrador solicitar una nueva suscripción', function () {
+        $user = superAdminSubUser();
         $plan = SubscriptionPlan::factory()->create(['price' => 120]);
 
         $payload = [
@@ -87,8 +87,29 @@ describe('planes públicos y suscripción de usuario', function () {
         ]);
     });
 
-    it('permite cancelar la suscripción activa o pendiente', function () {
+    it('un usuario sin rol de administrador no puede solicitar, cancelar ni ver facturas', function () {
         $user = userWith();
+        $plan = SubscriptionPlan::factory()->create();
+        $sub = Subscription::create([
+            'company_id' => 1,
+            'subscription_plan_id' => $plan->id,
+            'status' => 'active',
+            'starts_at' => now(),
+        ]);
+
+        $this->actingAs($user)->post(route('subscriptions.subscribe'), [
+            'subscription_plan_id' => $plan->id,
+            'method' => 'qr',
+            'reference' => 'TX-1',
+        ])->assertForbidden();
+        $this->actingAs($user)->post(route('subscriptions.cancel'))->assertForbidden();
+        $this->actingAs($user)->get(route('subscriptions.invoices'))->assertForbidden();
+
+        expect($sub->fresh()->status)->toBe('active');
+    });
+
+    it('permite a un administrador cancelar la suscripción activa o pendiente', function () {
+        $user = superAdminSubUser();
         $plan = SubscriptionPlan::factory()->create();
         $sub = Subscription::create([
             'company_id' => 1,
