@@ -26,7 +26,7 @@ class CashboxController extends Controller
 
     public function index(Request $request)
     {
-        $cashboxes = QueryBuilder::for(Cashbox::class)
+        $cashboxes = QueryBuilder::for(Cashbox::query()->select('cashboxes.*')->withQrTotal())
             ->with('branch')
             ->allowedFilters([
                 AllowedFilter::callback('buscar', function ($query, $value) {

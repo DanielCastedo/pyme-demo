@@ -80,6 +80,27 @@ class Cashbox extends Model
             ->values();
     }
 
+    /**
+     * Agrega `qr_total`: lo que entró (menos lo que salió) por métodos de pago QR, en transacciones
+     * vigentes. Un método cuenta como QR si su nombre contiene "QR" (ej. "QR Simple").
+     */
+    public function scopeWithQrTotal($query)
+    {
+        return $query->addSelect(['qr_total' => Transaction::query()
+            ->join('types', 'types.id', '=', 'transactions.type_id')
+            ->join('payments', 'payments.id', '=', 'transactions.payment_id')
+            ->whereColumn('transactions.cashbox_id', 'cashboxes.id')
+            ->where('transactions.canceled', false)
+            ->where('payments.name', 'like', '%QR%')
+            ->selectRaw("COALESCE(SUM(CASE WHEN types.sign = '-' THEN -transactions.amount ELSE transactions.amount END), 0)"),
+        ]);
+    }
+
+    protected function getQrLabelAttribute(): string
+    {
+        return number_format((float) ($this->qr_total ?? 0), 2);
+    }
+
     protected function getCashLabelAttribute(): string
     {
         return number_format((float) $this->cash, 2);

@@ -43,6 +43,7 @@
                 ['key' => 'name', 'label' => 'Caja'],
                 ['key' => 'branch.name', 'label' => 'Sucursal'],
                 ['key' => 'cash_label', 'label' => 'Efectivo'],
+                ['key' => 'qr_label', 'label' => 'QR'],
                 ['key' => 'balance_label', 'label' => 'Saldo Total'],
             ];
 

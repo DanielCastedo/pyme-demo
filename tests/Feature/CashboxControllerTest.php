@@ -2,8 +2,10 @@
 
 use App\Models\Branch;
 use App\Models\Cashbox;
+use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Models\Type;
+use App\Services\TransactionService;
 
 /*
 |--------------------------------------------------------------------------
@@ -133,6 +135,34 @@ describe('index', function () {
 
         expect($results)->toContain('Caja B1')
             ->and($results)->not->toContain('Caja B2');
+    });
+
+    it('muestra el total cobrado por QR de cada caja (entradas - salidas, sin las anuladas)', function () {
+        $branch = testBranch();
+        $cashbox = Cashbox::factory()->create(['branche_id' => $branch->id, 'name' => 'Caja QR']);
+        $other = Cashbox::factory()->create(['branche_id' => $branch->id, 'name' => 'Caja Sin QR']);
+        $qr = PaymentMethod::factory()->create(['name' => 'QR Simple', 'is_cash' => false]);
+        $cash = PaymentMethod::factory()->create(['name' => 'Efectivo', 'is_cash' => true]);
+        $in = Type::factory()->create(['sign' => '+']);
+        $out = Type::factory()->create(['sign' => '-']);
+        $user = userWith();
+
+        $register = fn (Cashbox $box, PaymentMethod $method, Type $type, $amount) => app(TransactionService::class)->register([
+            'type_id' => $type->id, 'payment_id' => $method->id, 'cashbox_id' => $box->id, 'amount' => $amount, 'user_id' => $user->id,
+        ]);
+
+        $register($cashbox, $qr, $in, 150);
+        $register($cashbox, $qr, $out, 30);
+        app(TransactionService::class)->cancel($register($cashbox, $qr, $in, 500));
+        $register($cashbox, $cash, $in, 80); // efectivo: no cuenta como QR
+        $register($other, $cash, $in, 40);
+
+        $rows = $this->get(route('cashboxes.index'))->assertOk()
+            ->assertSee('120.00')
+            ->viewData('cashboxes')->keyBy('name');
+
+        expect($rows['Caja QR']->qr_label)->toBe('120.00')
+            ->and($rows['Caja Sin QR']->qr_label)->toBe('0.00');
     });
 
     it('ordena por los campos permitidos y rechaza los no permitidos con 400', function () {

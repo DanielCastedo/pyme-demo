@@ -9,12 +9,14 @@ use Database\Seeders\Concerns\UsesDemoData;
 use Illuminate\Database\Seeder;
 
 /**
- * Cinco ventas, una por cada caso que conviene ver:
+ * Ocho ventas, una por cada caso que conviene ver:
  *  1) Un KIT al contado: se descuentan sus partes (2 destornilladores, 1 alicate, 20 tornillos).
  *  2) Contado con descuento (Bs 5 sobre la línea): el costo sale del lote más antiguo de martillos (Bs 45 c/u).
  *  3) A crédito con anticipo: la constructora deja Bs 100 y queda debiendo el resto (aparece en Cuentas por cobrar).
  *  4) La sucursal Norte vende del Almacén Central (compartido) y cobra en su propia caja.
  *  5) La sucursal Plan 3000 vende de su propio depósito.
+ *  6-8) Una venta cobrada por QR en cada sucursal: suben el saldo de la caja pero no el efectivo
+ *       (se ven en la columna "QR" de Cajas).
  */
 class OrderSeeder extends Seeder
 {
@@ -87,6 +89,41 @@ class OrderSeeder extends Seeder
             ['product_unit_id' => $this->unit('PIN-0001')->id, 'quantity' => 3],
         ], User::where('email', 'plan3000@ferreteriasantarosa.com')->firstOrFail());
 
-        $this->command->info('✅ Ventas de ejemplo registradas (kit, descuento, crédito, Norte y Plan 3000).');
+        // 6) Central cobra por QR
+        $sales->register(array_merge($contado, [
+            'customer_id' => $this->customer('6543210')->id,
+            'payment_id' => $this->qr()->id,
+            'note' => 'Venta cobrada por QR',
+        ]), [
+            ['product_unit_id' => $this->unit('HMA-0002')->id, 'quantity' => 3],
+            ['product_unit_id' => $this->unit('PIN-0001')->id, 'quantity' => 1],
+        ], $this->admin());
+
+        // 7) Norte cobra por QR (del Almacén Central)
+        $sales->register([
+            'warehouse_id' => $this->warehouse()->id,
+            'branche_id' => $norte->id,
+            'cashbox_id' => $this->cashbox($norte)->id,
+            'payment_id' => $this->qr()->id,
+            'payment_type' => 'cash',
+            'note' => 'Venta en sucursal Norte cobrada por QR',
+        ], [
+            ['product_unit_id' => $this->unit('HMA-0003')->id, 'quantity' => 2],
+        ], User::where('email', 'operador@ferreteriasantarosa.com')->firstOrFail());
+
+        // 8) Plan 3000 cobra por QR (de su depósito)
+        $sales->register([
+            'warehouse_id' => $this->warehouse('ALM-P3K')->id,
+            'branche_id' => $plan3000->id,
+            'cashbox_id' => $this->cashbox($plan3000)->id,
+            'payment_id' => $this->qr()->id,
+            'payment_type' => 'cash',
+            'note' => 'Venta en sucursal Plan 3000 cobrada por QR',
+        ], [
+            ['product_unit_id' => $this->unit('HMA-0001')->id, 'quantity' => 1],
+            ['product_unit_id' => $this->unit('PIN-0001')->id, 'quantity' => 1],
+        ], User::where('email', 'plan3000@ferreteriasantarosa.com')->firstOrFail());
+
+        $this->command->info('✅ Ventas de ejemplo registradas (kit, descuento, crédito, Norte, Plan 3000 y 3 cobradas por QR).');
     }
 }

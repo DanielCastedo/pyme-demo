@@ -45,6 +45,12 @@ trait UsesDemoData
         return PaymentMethod::where('is_cash', true)->firstOrFail();
     }
 
+    /** El método "QR Simple" (cuenta como QR por tener "QR" en el nombre, ver Cashbox::scopeWithQrTotal). */
+    protected function qr(): PaymentMethod
+    {
+        return PaymentMethod::where('name', 'like', '%QR%')->firstOrFail();
+    }
+
     protected function customer(string $document): Customer
     {
         return Customer::where('document', $document)->firstOrFail();
