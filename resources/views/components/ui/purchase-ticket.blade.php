@@ -113,7 +113,7 @@
                 <div id="quick-supplier-error" class="hidden mx-6 mt-4 px-3 py-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"></div>
 
                 <div class="px-6 py-5 overflow-y-auto space-y-3">
-                    <x-ui.form-field type="text" name="quick_supplier_name" id="quick-supplier-name" label="Nombre" placeholder="Ej. Ferretero Mayorista S.R.L." required />
+                    <x-ui.form-field type="text" name="quick_supplier_name" id="quick-supplier-name" label="Nombre" placeholder="Ej. Importadora Mayorista S.R.L." required />
                     <x-ui.form-field type="text" name="quick_supplier_tax_id" id="quick-supplier-tax-id" label="NIT" placeholder="Opcional" />
                     <x-ui.form-field type="text" name="quick_supplier_phone" id="quick-supplier-phone" label="Teléfono" placeholder="Opcional" />
                 </div>

@@ -17,9 +17,9 @@ class ProductComponentSeeder extends Seeder
         $kit = Product::where('sku', 'KIT-0001')->firstOrFail();
 
         foreach ([
-            'HMA-0002' => 2,  // destornilladores
-            'HMA-0003' => 1,  // alicate
-            'TOR-0001' => 20, // tornillos
+            'EST-0001' => 1, // estuche
+            'LON-0001' => 1, // lonchera
+            'LLA-0001' => 2, // llaveros
         ] as $sku => $quantity) {
             ProductComponent::updateOrCreate(
                 ['product_id' => $kit->id, 'component_product_id' => Product::where('sku', $sku)->firstOrFail()->id],
@@ -27,6 +27,6 @@ class ProductComponentSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ Kit de ejemplo creado (Juego de herramientas = 2 destornilladores + 1 alicate + 20 tornillos).');
+        $this->command->info('✅ Kit de ejemplo creado (Combo regreso a clases = 1 estuche + 1 lonchera + 2 llaveros).');
     }
 }

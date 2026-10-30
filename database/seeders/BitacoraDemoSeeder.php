@@ -16,7 +16,7 @@ class BitacoraDemoSeeder extends Seeder
     public function run(): void
     {
         $admin = User::where('email', 'admin@gmail.com')->first() ?? User::first();
-        $operador = User::where('email', 'operador@ferreteriasantarosa.com')->first() ?? $admin;
+        $operador = User::where('email', UsuariosSeeder::VENDEDOR_NORTE)->first() ?? $admin;
         $nora = Customer::where('name', 'like', '%Nora%')->first();
         $producto = Product::first();
         $gasto = Expense::first();

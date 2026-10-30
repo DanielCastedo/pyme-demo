@@ -10,12 +10,12 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         foreach ([
-            ['name' => 'Herramientas Manuales', 'description' => 'Martillos, destornilladores, alicates, llaves y juegos de herramientas.'],
-            ['name' => 'Herramientas Eléctricas', 'description' => 'Taladros, amoladoras, sierras y lijadoras.'],
-            ['name' => 'Tornillería y Fijaciones', 'description' => 'Tornillos, clavos, pernos, tarugos y abrazaderas.'],
-            ['name' => 'Pinturas y Accesorios', 'description' => 'Látex, esmaltes, brochas, rodillos y diluyentes.'],
-            ['name' => 'Electricidad', 'description' => 'Cables, enchufes, interruptores y focos.'],
-            ['name' => 'Plomería', 'description' => 'Tubos, codos, llaves de paso y pegamento PVC.'],
+            ['name' => 'Mochilas Escolares', 'description' => 'Mochilas para colegio, con ruedas, de espalda acolchada y combos de regreso a clases.'],
+            ['name' => 'Mochilas Urbanas y de Laptop', 'description' => 'Mochilas antirrobo, para laptop, de viaje y de uso diario.'],
+            ['name' => 'Estuches y Cartucheras', 'description' => 'Estuches de uno o dos cierres, cartucheras tipo lata y porta lápices.'],
+            ['name' => 'Loncheras', 'description' => 'Loncheras térmicas, porta tapers y botellas.'],
+            ['name' => 'Bolsos y Maletines', 'description' => 'Bolsos deportivos, de viaje, maletines y riñoneras.'],
+            ['name' => 'Accesorios', 'description' => 'Llaveros, candados, fundas impermeables y parches.'],
         ] as $category) {
             Category::updateOrCreate(['name' => $category['name']], $category);
         }

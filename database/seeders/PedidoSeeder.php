@@ -30,9 +30,9 @@ class PedidoSeeder extends Seeder
             'delivery_date' => now()->addDays(3)->toDateString(),
             'note' => 'Retira en 3 días',
         ], [
-            ['product_unit_id' => $this->unit('HMA-0001')->id, 'quantity' => 3],
+            ['product_unit_id' => $this->unit('MOC-0001')->id, 'quantity' => 3],
         ], $this->admin());
 
-        $this->command->info('✅ Pedido de ejemplo registrado (3 martillos, en espera).');
+        $this->command->info('✅ Pedido de ejemplo registrado (3 mochilas escolares, en espera).');
     }
 }

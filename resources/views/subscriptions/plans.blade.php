@@ -6,7 +6,7 @@
         @endif
 
         <x-ui.page-header category="Configuración" title="Planes Disponibles"
-            description="Elige el plan que mejor se adapte a tu ferretería." />
+            description="Elige el plan que mejor se adapte a tu negocio." />
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             @foreach ($plans as $plan)

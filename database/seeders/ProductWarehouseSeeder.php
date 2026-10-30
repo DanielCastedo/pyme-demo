@@ -17,12 +17,12 @@ class ProductWarehouseSeeder extends Seeder
 
     public function run(): void
     {
-        foreach (['HMA-0001' => 5, 'HEL-0001' => 5, 'TOR-0001' => 200] as $sku => $minimo) {
+        foreach (['MOC-0001' => 5, 'MOC-0002' => 5, 'LLA-0001' => 24] as $sku => $minimo) {
             ProductWarehouse::where('product_id', Product::where('sku', $sku)->firstOrFail()->id)
                 ->where('warehouse_id', $this->warehouse()->id)
                 ->update(['min_stock' => $minimo]);
         }
 
-        $this->command->info('✅ Stock mínimo de ejemplo definido (martillo y taladro: 5; tornillos: 200).');
+        $this->command->info('✅ Stock mínimo de ejemplo definido (mochilas: 5; llaveros: 24).');
     }
 }

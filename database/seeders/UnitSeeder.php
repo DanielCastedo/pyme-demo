@@ -8,21 +8,20 @@ use Illuminate\Database\Seeder;
 class UnitSeeder extends Seeder
 {
     /**
-     * Catálogo base de unidades de medida de una ferretería.
+     * Catálogo base de unidades de medida de una tienda de mochilas y estuches.
      */
     public function run(): void
     {
         $units = [
             ['Unidad', 'und'],
             ['Pieza', 'pza'],
+            ['Par', 'par'],
             ['Juego', 'jgo'],
-            ['Caja', 'cja'],
+            ['Combo', 'cmb'],
             ['Paquete', 'paq'],
+            ['Docena', 'doc'],
+            ['Caja', 'cja'],
             ['Bolsa', 'bol'],
-            ['Metro', 'm'],
-            ['Rollo', 'rll'],
-            ['Kilo', 'kg'],
-            ['Galón', 'gal'],
         ];
 
         foreach ($units as [$name, $abbreviation]) {

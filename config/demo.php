@@ -22,19 +22,19 @@ return [
         [
             'label' => 'Administración',
             'role' => 'Administrador',
-            'email' => 'administracion@ferreteriasantarosa.com',
+            'email' => 'administracion@mochilassantarosa.com',
             'password' => '12345678',
         ],
         [
             'label' => 'Vendedor Norte',
             'role' => 'Operador · usa el Almacén Central',
-            'email' => 'operador@ferreteriasantarosa.com',
+            'email' => 'operador@mochilassantarosa.com',
             'password' => '12345678',
         ],
         [
             'label' => 'Vendedor Plan 3000',
             'role' => 'Operador · almacén propio',
-            'email' => 'plan3000@ferreteriasantarosa.com',
+            'email' => 'plan3000@mochilassantarosa.com',
             'password' => '12345678',
         ],
     ],

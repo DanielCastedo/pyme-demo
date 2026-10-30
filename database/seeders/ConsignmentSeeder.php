@@ -28,11 +28,11 @@ class ConsignmentSeeder extends Seeder
             'warehouse_id' => $this->warehouse()->id,
             'branche_id' => $this->branch(BranchSeeder::CENTRAL)->id,
             'due_date' => now()->addDays(30)->toDateString(),
-            'note' => 'Pintura para ofrecer en sus obras',
+            'note' => 'Bolsos deportivos para revender en Montero',
         ], [
-            ['product_unit_id' => $this->unit('PIN-0001')->id, 'quantity' => 5],
+            ['product_unit_id' => $this->unit('BOL-0001')->id, 'quantity' => 5],
         ], $this->admin());
 
-        $this->command->info('✅ Consignación de ejemplo registrada (5 galones de pintura).');
+        $this->command->info('✅ Consignación de ejemplo registrada (5 bolsos deportivos).');
     }
 }

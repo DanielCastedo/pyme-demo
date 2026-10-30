@@ -83,7 +83,7 @@
 
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1.5">Nombre del Negocio</label>
-                        <input type="text" name="business_name" value="{{ old('business_name') }}" placeholder="Ej. Ferretería El Tornillo"
+                        <input type="text" name="business_name" value="{{ old('business_name') }}" placeholder="Ej. Mochilas El Estudiante"
                             class="w-full px-3 h-10 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                     </div>
 

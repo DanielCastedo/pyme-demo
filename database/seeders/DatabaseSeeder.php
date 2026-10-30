@@ -9,10 +9,10 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      *
-     * Ferretería con tres sucursales: Central y Norte comparten el Almacén Central y Plan 3000 tiene su propio
-     * depósito (una caja por sucursal). Primero lo básico del sistema (usuarios, roles, menús, catálogos) y después
-     * una historia de ejemplo chica y coherente (ver cada seeder): herramientas, un juego de herramientas (kit),
-     * compras, ventas en cada sucursal, un pedido y una consignación.
+     * Tienda de mochilas y estuches con tres sucursales: Central y Norte comparten el Almacén Central y Plan 3000
+     * tiene su propio depósito (una caja por sucursal). Primero lo básico del sistema (usuarios, roles, menús,
+     * catálogos) y después una historia de ejemplo chica y coherente (ver cada seeder): mochilas, estuches, un
+     * combo escolar (kit), compras, ventas en cada sucursal (en efectivo y por QR), un pedido y una consignación.
      * Todo se registra con los mismos servicios que usa el sistema, así el stock y el dinero cuadran.
      *
      * Para tener solo lo básico, comenta el bloque "Datos de ejemplo".

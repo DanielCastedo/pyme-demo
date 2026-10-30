@@ -6,16 +6,16 @@ use App\Models\Branch;
 use Illuminate\Database\Seeder;
 
 /**
- * La ferretería tiene tres sucursales. Central y Norte venden del mismo almacén (ver WarehouseSeeder);
+ * La tienda tiene tres sucursales. Central y Norte venden del mismo almacén (ver WarehouseSeeder);
  * Plan 3000 tiene su propio depósito.
  */
 class BranchSeeder extends Seeder
 {
-    public const CENTRAL = 'Ferretería Santa Rosa - Central';
+    public const CENTRAL = 'Mochilas Santa Rosa - Central';
 
-    public const NORTE = 'Ferretería Santa Rosa - Norte';
+    public const NORTE = 'Mochilas Santa Rosa - Norte';
 
-    public const PLAN_3000 = 'Ferretería Santa Rosa - Plan 3000';
+    public const PLAN_3000 = 'Mochilas Santa Rosa - Plan 3000';
 
     public function run(): void
     {

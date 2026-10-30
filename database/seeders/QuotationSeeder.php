@@ -22,25 +22,25 @@ class QuotationSeeder extends Seeder
         $cotizaciones = [
             [
                 'number' => 'COT-0001',
-                'customer_name' => 'Constructora Andina S.R.L.',
+                'customer_name' => 'Unidad Educativa San Martín',
                 'customer_document' => '1023456029',
                 'customer_phone' => '3-3221100',
-                'notes' => 'Proforma de herramientas para la cuadrilla de la obra.',
+                'notes' => 'Proforma de útiles para los alumnos becados.',
                 'items' => [
-                    ['sku' => 'HMA-0002', 'quantity' => 20],
-                    ['sku' => 'HMA-0003', 'quantity' => 10],
+                    ['sku' => 'EST-0001', 'quantity' => 20],
+                    ['sku' => 'LON-0001', 'quantity' => 10],
                     ['sku' => 'KIT-0001', 'quantity' => 5],
                 ],
             ],
             [
                 'number' => 'COT-0002',
-                'customer_name' => 'Pedro Gutiérrez (Maestro de obra)',
+                'customer_name' => 'Rosa Vaca (Revendedora)',
                 'customer_document' => '7788990',
                 'customer_phone' => '76543210',
-                'notes' => 'Proforma de martillos y pintura para una obra.',
+                'notes' => 'Proforma de mochilas y bolsos para reventa.',
                 'items' => [
-                    ['sku' => 'HMA-0001', 'quantity' => 6],
-                    ['sku' => 'PIN-0001', 'quantity' => 10],
+                    ['sku' => 'MOC-0001', 'quantity' => 6],
+                    ['sku' => 'BOL-0001', 'quantity' => 10],
                 ],
             ],
         ];

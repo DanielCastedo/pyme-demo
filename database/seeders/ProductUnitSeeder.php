@@ -14,13 +14,13 @@ class ProductUnitSeeder extends Seeder
 {
     public function run(): void
     {
-        $caja = Unit::where('name', 'Caja')->firstOrFail();
+        $paquete = Unit::where('name', 'Paquete')->firstOrFail();
 
-        Product::where('sku', 'TOR-0001')->firstOrFail()->units()->updateOrCreate(
-            ['name' => $caja->name],
-            ['unit_id' => $caja->id, 'factor' => 100, 'price' => 25, 'is_base' => false, 'barcode' => 'TOR-0001-CAJA']
+        Product::where('sku', 'LLA-0001')->firstOrFail()->units()->updateOrCreate(
+            ['name' => $paquete->name],
+            ['unit_id' => $paquete->id, 'factor' => 12, 'price' => 50, 'is_base' => false, 'barcode' => 'LLA-0001-PAQ']
         );
 
-        $this->command->info('✅ Presentación de ejemplo creada (Tornillo: Caja x100).');
+        $this->command->info('✅ Presentación de ejemplo creada (Llavero: Paquete x12).');
     }
 }

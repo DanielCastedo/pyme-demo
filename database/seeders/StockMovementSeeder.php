@@ -28,20 +28,20 @@ class StockMovementSeeder extends Seeder
 
         $entrada = Type::where('code', 'ENT')->firstOrFail();
 
-        $stock->register($entrada, $this->warehouse()->id, now()->subDays(20), 'Inventario inicial de martillos', $this->admin()->id, [
-            ['product_unit_id' => $this->unit('HMA-0001')->id, 'quantity' => 10, 'unit_cost' => 45],
+        $stock->register($entrada, $this->warehouse()->id, now()->subDays(20), 'Inventario inicial de mochilas escolares', $this->admin()->id, [
+            ['product_unit_id' => $this->unit('MOC-0001')->id, 'quantity' => 10, 'unit_cost' => 110],
         ]);
 
-        $stock->register($entrada, $this->warehouse()->id, now()->subDays(10), 'Segundo lote de martillos (llegó más caro), taladros y pintura', $this->admin()->id, [
-            ['product_unit_id' => $this->unit('HMA-0001')->id, 'quantity' => 10, 'unit_cost' => 50],
-            ['product_unit_id' => $this->unit('HEL-0001')->id, 'quantity' => 3, 'unit_cost' => 380],
-            ['product_unit_id' => $this->unit('PIN-0001')->id, 'quantity' => 30, 'unit_cost' => 60],
+        $stock->register($entrada, $this->warehouse()->id, now()->subDays(10), 'Segundo lote de mochilas escolares (llegó más caro), mochilas para laptop y bolsos', $this->admin()->id, [
+            ['product_unit_id' => $this->unit('MOC-0001')->id, 'quantity' => 10, 'unit_cost' => 120],
+            ['product_unit_id' => $this->unit('MOC-0002')->id, 'quantity' => 3, 'unit_cost' => 280],
+            ['product_unit_id' => $this->unit('BOL-0001')->id, 'quantity' => 30, 'unit_cost' => 90],
         ]);
 
         $stock->register($entrada, $this->warehouse('ALM-P3K')->id, now()->subDays(10), 'Inventario inicial del Depósito Plan 3000', $this->admin()->id, [
-            ['product_unit_id' => $this->unit('HMA-0001')->id, 'quantity' => 8, 'unit_cost' => 48],
-            ['product_unit_id' => $this->unit('PIN-0001')->id, 'quantity' => 12, 'unit_cost' => 62],
-            ['product_unit_id' => $this->unit('TOR-0001', 'Caja')->id, 'quantity' => 3, 'unit_cost' => 16],
+            ['product_unit_id' => $this->unit('MOC-0001')->id, 'quantity' => 8, 'unit_cost' => 115],
+            ['product_unit_id' => $this->unit('BOL-0001')->id, 'quantity' => 12, 'unit_cost' => 95],
+            ['product_unit_id' => $this->unit('LLA-0001', 'Paquete')->id, 'quantity' => 3, 'unit_cost' => 32],
         ]);
 
         $this->command->info('✅ Entradas de stock de ejemplo registradas (Almacén Central y Depósito Plan 3000).');

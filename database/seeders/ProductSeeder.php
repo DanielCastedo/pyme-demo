@@ -8,26 +8,26 @@ use App\Models\Unit;
 use Illuminate\Database\Seeder;
 
 /**
- * Siete productos de ferretería, cada uno para explicar algo distinto:
- *  - Martillo:      producto simple (dos entradas a distinto costo → se ve el FIFO).
- *  - Tornillo:      se vende suelto o en "Caja x100" (ver ProductUnitSeeder).
- *  - Destornillador, Alicate y Juego de herramientas: el juego es un kit armado con
- *                   2 destornilladores + 1 alicate + 20 tornillos (ver ProductComponentSeeder).
- *  - Taladro:       queda con poco stock para que aparezca la alerta de stock mínimo.
- *  - Pintura látex: producto de la categoría con promoción (ver PromotionSeeder).
+ * Siete productos de una tienda de mochilas y estuches, cada uno para explicar algo distinto:
+ *  - Mochila escolar:     producto simple (dos entradas a distinto costo → se ve el FIFO).
+ *  - Llavero:             se vende suelto o en "Paquete x12" (ver ProductUnitSeeder).
+ *  - Estuche, Lonchera y Combo regreso a clases: el combo es un kit armado con
+ *                         1 estuche + 1 lonchera + 2 llaveros (ver ProductComponentSeeder).
+ *  - Mochila para laptop: queda con poco stock para que aparezca la alerta de stock mínimo.
+ *  - Bolso deportivo:     producto de la categoría con promoción (ver PromotionSeeder).
  */
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
         foreach ([
-            ['TOR-0001', 'Tornillo autorroscante 8 x 1"', 'Tornillería y Fijaciones', 'Unidad', 0.30, 'Punta broca, cabeza Phillips. Se vende suelto o en caja de 100.', 'Fixser', '8 x 1"', 'Zincado'],
-            ['HMA-0001', 'Martillo de uña 16 oz', 'Herramientas Manuales', 'Unidad', 75, 'Mango de fibra de vidrio antivibración.', 'Stanley', '16 oz', 'Amarillo'],
-            ['HEL-0001', 'Taladro percutor 650W 13mm', 'Herramientas Eléctricas', 'Unidad', 520, 'Velocidad variable y reversible. Incluye maletín.', 'Bosch', '13mm', 'Azul'],
-            ['HMA-0002', 'Destornillador plano 6"', 'Herramientas Manuales', 'Pieza', 18, 'Punta imantada, mango ergonómico.', 'Truper', '6"', null],
-            ['HMA-0003', 'Alicate universal 8"', 'Herramientas Manuales', 'Pieza', 45, 'Acero al cromo vanadio, mango aislado.', 'Truper', '8"', 'Rojo'],
-            ['KIT-0001', 'Juego de herramientas básico para el hogar', 'Herramientas Manuales', 'Juego', 150, 'Kit: 2 destornilladores + 1 alicate + 20 tornillos.', null, 'Básico', null],
-            ['PIN-0001', 'Pintura látex interior blanco', 'Pinturas y Accesorios', 'Galón', 95, 'Lavable, acabado mate. Rinde 35 m² por galón.', 'Monopol', '1 galón', 'Blanco'],
+            ['LLA-0001', 'Llavero colgante para mochila', 'Accesorios', 'Unidad', 5, 'Figuras surtidas de goma. Se vende suelto o en paquete de 12.', 'Kawaii', '6 cm', 'Surtido'],
+            ['MOC-0001', 'Mochila escolar clásica 18"', 'Mochilas Escolares', 'Unidad', 180, 'Dos compartimentos, espalda acolchada y tela impermeable.', 'Totto', '18"', 'Azul marino'],
+            ['MOC-0002', 'Mochila antirrobo para laptop 15.6"', 'Mochilas Urbanas y de Laptop', 'Unidad', 420, 'Cierre oculto, puerto USB y compartimento acolchado para laptop.', 'Xtrem', '15.6"', 'Gris'],
+            ['EST-0001', 'Estuche escolar de doble cierre', 'Estuches y Cartucheras', 'Unidad', 35, 'Dos compartimentos, tela poliéster lavable.', 'Totto', '22 x 10 cm', 'Rosado'],
+            ['LON-0001', 'Lonchera térmica', 'Loncheras', 'Unidad', 65, 'Forro térmico: mantiene frío o calor hasta 4 horas.', 'Xtrem', '24 x 18 cm', 'Verde'],
+            ['KIT-0001', 'Combo regreso a clases', 'Mochilas Escolares', 'Combo', 99, 'Combo: 1 estuche + 1 lonchera + 2 llaveros.', null, 'Escolar', null],
+            ['BOL-0001', 'Bolso deportivo 50 L', 'Bolsos y Maletines', 'Unidad', 150, 'Compartimento para calzado y correa acolchada.', 'Adidas', '50 L', 'Negro'],
         ] as [$sku, $name, $category, $unitName, $price, $description, $marca, $medida, $color]) {
             $product = Product::updateOrCreate(['sku' => $sku], [
                 'name' => $name,

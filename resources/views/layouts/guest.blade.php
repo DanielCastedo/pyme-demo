@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <x-pwa-head />
 
-        <title>{{ $title ?? config('app.name', 'Ferretería') }}</title>
+        <title>{{ $title ?? config('app.name', 'Sistema de Ventas') }}</title>
 
         <!-- Fonts -->
         <link rel="icon" type="image/png" href="{{ $appLogoUrl }}" />

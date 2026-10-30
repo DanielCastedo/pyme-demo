@@ -12,8 +12,8 @@ class CompanySeeder extends Seeder
         Company::updateOrCreate(
             ['id' => 1], // asegura que siempre exista un único registro
             [
-                'name' => 'Ferretería Santa Rosa',
-                'legal_name' => 'Ferretería Santa Rosa S.R.L.',
+                'name' => 'Mochilas Santa Rosa',
+                'legal_name' => 'Mochilas Santa Rosa S.R.L.',
                 'tax_id' => null,
                 'phone' => '3-3524100',
                 'email' => null,

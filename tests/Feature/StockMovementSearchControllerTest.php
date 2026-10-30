@@ -37,7 +37,8 @@ it('busca por nombre de producto, nombre de presentación o SKU', function () {
     $product = Product::factory()->create(['name' => 'Martillo de uña', 'sku' => 'HM-0001']);
     $unit = ProductUnit::factory()->create(['product_id' => $product->id, 'is_base' => true, 'name' => 'Caja x12']);
     $other = Product::factory()->create(['name' => 'Destornillador']);
-    $otherUnit = ProductUnit::factory()->create(['product_id' => $other->id, 'is_base' => true]);
+    // Nombre fijo: el de la factory es al azar y a veces sale "Caja x12", que es justo uno de los términos buscados.
+    $otherUnit = ProductUnit::factory()->create(['product_id' => $other->id, 'is_base' => true, 'name' => 'Pieza']);
 
     foreach (['Martillo', 'Caja x12', 'HM-0001'] as $term) {
         $ids = $this->getJson(route('stock-movements.products.search', ['q' => $term]))->json('units.*.id');

@@ -69,7 +69,7 @@
 
                         <div class="flex items-center gap-2 shrink-0">
                             <form action="{{ route('subscription-leads.convert', $lead) }}" method="POST" class="flex items-center gap-2"
-                                onsubmit="return confirm('¿Activar la suscripción de la ferretería con este plan?')">
+                                onsubmit="return confirm('¿Activar la suscripción del negocio con este plan?')">
                                 @csrf
                                 <select name="subscription_plan_id" required
                                     class="px-2 h-9 text-xs rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white">

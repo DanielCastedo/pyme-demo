@@ -17,7 +17,7 @@ describe('modo demostración apagado', function () {
     it('no muestra los accesos directos ni el botón de restablecer', function () {
         $this->get(route('login'))->assertOk()
             ->assertDontSee('Usuarios de prueba')
-            ->assertDontSee('operador@ferreteriasantarosa.com')
+            ->assertDontSee('operador@mochilassantarosa.com')
             ->assertDontSee(route('demo.reset'));
     });
 

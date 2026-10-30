@@ -58,7 +58,7 @@
                         'type' => 'text',
                         'name' => 'name',
                         'label' => 'Nombre Comercial',
-                        'placeholder' => 'Ej. Ferretería El Constructor',
+                        'placeholder' => 'Ej. Mochilas Santa Rosa',
                         'required' => true,
                     ],
                     [
@@ -83,7 +83,7 @@
                         'type' => 'email',
                         'name' => 'email',
                         'label' => 'Correo',
-                        'placeholder' => 'contacto@ferreteria.com',
+                        'placeholder' => 'contacto@minegocio.com',
                     ],
                     [
                         'type' => 'text',
