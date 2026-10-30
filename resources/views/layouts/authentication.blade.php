@@ -76,7 +76,7 @@
 
                 <!-- Image -->
                 <div class="hidden md:block absolute top-0 bottom-0 right-0 md:w-5/12 lg:w-1/2 border-l border-gray-200 dark:border-gray-800" aria-hidden="true">
-                    <img class="object-cover object-top w-full h-full" src="{{ $versionedAsset('images/hero.jpg') }}" width="1100" height="1150" alt="" />
+                    <img class="object-cover object-top w-full h-full" src="{{ $versionedAsset('images/hero.webp') }}" width="1100" height="1150" alt="" />
                 </div>
 
             </div>

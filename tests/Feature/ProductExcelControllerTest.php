@@ -124,6 +124,8 @@ describe('validaciones de importación', function () {
 
 describe('importación general: flujo completo', function () {
     it('crea productos nuevos con marca/color/medida, su unidad base, la foto pegada en la celda y carga el stock inicial en el almacén elegido', function () {
+        // Sin esto la foto de prueba se guardaría en el public/uploads real.
+        \Illuminate\Support\Facades\Storage::fake('uploads');
         $user = userWith('ver products', 'productos.importar');
         Unit::firstOrCreate(['name' => 'Unidad'], ['abbreviation' => 'und', 'is_active' => true]);
         \App\Models\Type::firstOrCreate(['code' => 'ENT'], ['name' => 'Entrada de Stock', 'sign' => '+']);
