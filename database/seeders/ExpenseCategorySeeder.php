@@ -13,7 +13,7 @@ class ExpenseCategorySeeder extends Seeder
             'Servicios básicos (luz, agua, internet)',
             'Alquiler',
             'Transporte y fletes',
-            'Mantenimiento del local y equipos',
+            'Licencias y patentes municipales',
             'Otros gastos',
         ] as $name) {
             ExpenseCategory::firstOrCreate(['name' => $name]);

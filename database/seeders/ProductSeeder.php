@@ -8,26 +8,29 @@ use App\Models\Unit;
 use Illuminate\Database\Seeder;
 
 /**
- * Siete productos de ferretería, cada uno para explicar algo distinto:
- *  - Martillo:      producto simple (dos entradas a distinto costo → se ve el FIFO).
- *  - Tornillo:      se vende suelto o en "Caja x100" (ver ProductUnitSeeder).
- *  - Destornillador, Alicate y Juego de herramientas: el juego es un kit armado con
- *                   2 destornilladores + 1 alicate + 20 tornillos (ver ProductComponentSeeder).
- *  - Taladro:       queda con poco stock para que aparezca la alerta de stock mínimo.
- *  - Pintura látex: producto de la categoría con promoción (ver PromotionSeeder).
+ * Ocho productos de licorería, cada uno para explicar algo distinto:
+ *  - Whisky:   producto simple (dos entradas a distinto costo → se ve el FIFO).
+ *  - Cerveza:  se vende por lata o en "Caja x24" (ver ProductUnitSeeder).
+ *  - Singani, Gaseosa, Hielo y Combo Chuflay: el combo es un kit armado con
+ *              1 singani + 2 gaseosas + 1 bolsa de hielo (ver ProductComponentSeeder).
+ *  - Ron:      queda con poco stock para que aparezca la alerta de stock mínimo.
+ *  - Vino:     producto de la categoría con promoción (ver PromotionSeeder).
+ *
+ * "marca" guarda la marca, "medida" el contenido y "color" el tipo (tinto, rubia, etc.).
  */
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
         foreach ([
-            ['TOR-0001', 'Tornillo autorroscante 8 x 1"', 'Tornillería y Fijaciones', 'Unidad', 0.30, 'Punta broca, cabeza Phillips. Se vende suelto o en caja de 100.', 'Fixser', '8 x 1"', 'Zincado'],
-            ['HMA-0001', 'Martillo de uña 16 oz', 'Herramientas Manuales', 'Unidad', 75, 'Mango de fibra de vidrio antivibración.', 'Stanley', '16 oz', 'Amarillo'],
-            ['HEL-0001', 'Taladro percutor 650W 13mm', 'Herramientas Eléctricas', 'Unidad', 520, 'Velocidad variable y reversible. Incluye maletín.', 'Bosch', '13mm', 'Azul'],
-            ['HMA-0002', 'Destornillador plano 6"', 'Herramientas Manuales', 'Pieza', 18, 'Punta imantada, mango ergonómico.', 'Truper', '6"', null],
-            ['HMA-0003', 'Alicate universal 8"', 'Herramientas Manuales', 'Pieza', 45, 'Acero al cromo vanadio, mango aislado.', 'Truper', '8"', 'Rojo'],
-            ['KIT-0001', 'Juego de herramientas básico para el hogar', 'Herramientas Manuales', 'Juego', 150, 'Kit: 2 destornilladores + 1 alicate + 20 tornillos.', null, 'Básico', null],
-            ['PIN-0001', 'Pintura látex interior blanco', 'Pinturas y Accesorios', 'Galón', 95, 'Lavable, acabado mate. Rinde 35 m² por galón.', 'Monopol', '1 galón', 'Blanco'],
+            ['CER-0001', 'Cerveza rubia lata 354ml', 'Cervezas', 'Lata', 10, 'Se vende por lata o en caja de 24.', 'Paceña', '354ml', 'Rubia'],
+            ['WHI-0001', 'Whisky escocés Red Label 750ml', 'Whiskys', 'Botella', 180, 'Blended Scotch whisky, 40% vol.', 'Johnnie Walker', '750ml', null],
+            ['RON-0001', 'Ron añejo 7 años 750ml', 'Rones y Vodkas', 'Botella', 210, 'Ron cubano añejado 7 años, 40% vol.', 'Havana Club', '750ml', 'Añejo'],
+            ['SIN-0001', 'Singani etiqueta negra 750ml', 'Singanis y Piscos', 'Botella', 75, 'Singani boliviano de uva moscatel, 40% vol.', 'Casa Real', '750ml', null],
+            ['GAS-0001', 'Gaseosa lima-limón 2L', 'Bebidas sin Alcohol y Hielo', 'Botella', 15, 'Ideal para preparar chuflay.', 'Sprite', '2L', null],
+            ['HIE-0001', 'Hielo en cubos 3kg', 'Bebidas sin Alcohol y Hielo', 'Bolsa', 10, 'Bolsa de cubos de hielo.', null, '3kg', null],
+            ['CMB-0001', 'Combo Chuflay', 'Singanis y Piscos', 'Combo', 110, 'Kit: 1 singani 750ml + 2 gaseosas 2L + 1 bolsa de hielo.', null, 'Para 8 vasos', null],
+            ['VIN-0001', 'Vino tinto Cabernet Sauvignon 750ml', 'Vinos y Espumantes', 'Botella', 65, 'Vino de altura de Tarija, 13% vol.', 'Kohlberg', '750ml', 'Tinto'],
         ] as [$sku, $name, $category, $unitName, $price, $description, $marca, $medida, $color]) {
             $product = Product::updateOrCreate(['sku' => $sku], [
                 'name' => $name,

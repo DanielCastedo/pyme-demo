@@ -10,9 +10,9 @@ use Illuminate\Database\Seeder;
 
 /**
  * Cinco ventas, una por cada caso que conviene ver:
- *  1) Un KIT al contado: se descuentan sus partes (2 destornilladores, 1 alicate, 20 tornillos).
- *  2) Contado con descuento (Bs 5 sobre la línea): el costo sale del lote más antiguo de martillos (Bs 45 c/u).
- *  3) A crédito con anticipo: la constructora deja Bs 100 y queda debiendo el resto (aparece en Cuentas por cobrar).
+ *  1) Un KIT al contado: se descuentan sus partes (1 singani, 2 gaseosas, 1 bolsa de hielo).
+ *  2) Contado con descuento (Bs 10 sobre la línea): el costo sale del lote más antiguo de whisky (Bs 120 c/u).
+ *  3) A crédito con anticipo: la empresa de eventos deja Bs 100 y queda debiendo el resto (aparece en Cuentas por cobrar).
  *  4) La sucursal Norte vende del Almacén Central (compartido) y cobra en su propia caja.
  *  5) La sucursal Plan 3000 vende de su propio depósito.
  */
@@ -38,26 +38,26 @@ class OrderSeeder extends Seeder
         ];
 
         // 1) Kit
-        $sales->register(array_merge($contado, ['note' => 'Juego de herramientas básico (kit)']), [
-            ['product_unit_id' => $this->unit('KIT-0001')->id, 'quantity' => 1],
+        $sales->register(array_merge($contado, ['note' => 'Combo Chuflay (kit)']), [
+            ['product_unit_id' => $this->unit('CMB-0001')->id, 'quantity' => 1],
         ], $this->admin());
 
         // 2) Contado con descuento
-        $sales->register(array_merge($contado, ['customer_id' => $this->customer('6543210')->id, 'note' => 'Dos martillos con descuento']), [
-            ['product_unit_id' => $this->unit('HMA-0001')->id, 'quantity' => 2, 'discount_type' => 'amount', 'discount_value' => 5],
+        $sales->register(array_merge($contado, ['customer_id' => $this->customer('6543210')->id, 'note' => 'Dos whiskys con descuento']), [
+            ['product_unit_id' => $this->unit('WHI-0001')->id, 'quantity' => 2, 'discount_type' => 'amount', 'discount_value' => 10],
         ], $this->admin());
 
         // 3) Crédito con anticipo
         // (array_merge y no "+": con "+" gana la clave de la izquierda y seguiría siendo 'cash')
         $sales->register(array_merge($contado, [
             'customer_id' => $this->customer('1023456029')->id,
-            'note' => 'Venta a crédito a 15 días para la obra de la constructora',
+            'note' => 'Venta a crédito a 15 días para un evento',
             'payment_type' => 'credit',
             'due_date' => now()->addDays(15)->toDateString(),
             'initial_payment' => 100,
         ]), [
-            ['product_unit_id' => $this->unit('TOR-0001', 'Caja')->id, 'quantity' => 2],
-            ['product_unit_id' => $this->unit('HEL-0001')->id, 'quantity' => 1],
+            ['product_unit_id' => $this->unit('CER-0001', 'Caja')->id, 'quantity' => 2],
+            ['product_unit_id' => $this->unit('RON-0001')->id, 'quantity' => 1],
         ], $this->admin());
 
         // 4) Norte vende del almacén que comparte con Central
@@ -70,9 +70,9 @@ class OrderSeeder extends Seeder
             'payment_type' => 'cash',
             'note' => 'Venta en sucursal Norte desde el Almacén Central',
         ], [
-            ['product_unit_id' => $this->unit('HMA-0001')->id, 'quantity' => 1],
-            ['product_unit_id' => $this->unit('PIN-0001')->id, 'quantity' => 2],
-        ], User::where('email', 'operador@ferreteriasantarosa.com')->firstOrFail());
+            ['product_unit_id' => $this->unit('WHI-0001')->id, 'quantity' => 1],
+            ['product_unit_id' => $this->unit('VIN-0001')->id, 'quantity' => 2],
+        ], User::where('email', 'operador@licoreriasantarosa.com')->firstOrFail());
 
         // 5) Plan 3000 vende de su propio depósito
         $plan3000 = $this->branch(BranchSeeder::PLAN_3000);
@@ -84,9 +84,9 @@ class OrderSeeder extends Seeder
             'payment_type' => 'cash',
             'note' => 'Venta en sucursal Plan 3000',
         ], [
-            ['product_unit_id' => $this->unit('PIN-0001')->id, 'quantity' => 3],
-        ], User::where('email', 'plan3000@ferreteriasantarosa.com')->firstOrFail());
+            ['product_unit_id' => $this->unit('VIN-0001')->id, 'quantity' => 3],
+        ], User::where('email', 'plan3000@licoreriasantarosa.com')->firstOrFail());
 
-        $this->command->info('✅ Ventas de ejemplo registradas (kit, descuento, crédito, Norte y Plan 3000).');
+        $this->command->info('✅ Ventas de ejemplo registradas (combo, descuento, crédito, Norte y Plan 3000).');
     }
 }

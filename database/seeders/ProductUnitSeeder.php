@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Presentaciones (además de la unidad base que ya crea ProductSeeder).
- * Ejemplo: el tornillo se vende suelto a Bs 0.30 o en "Caja" de 100 a Bs 25 (factor 100 = trae 100 tornillos).
+ * Ejemplo: la cerveza se vende por lata a Bs 10 o en "Caja" de 24 a Bs 200 (factor 24 = trae 24 latas).
  */
 class ProductUnitSeeder extends Seeder
 {
@@ -16,11 +16,11 @@ class ProductUnitSeeder extends Seeder
     {
         $caja = Unit::where('name', 'Caja')->firstOrFail();
 
-        Product::where('sku', 'TOR-0001')->firstOrFail()->units()->updateOrCreate(
+        Product::where('sku', 'CER-0001')->firstOrFail()->units()->updateOrCreate(
             ['name' => $caja->name],
-            ['unit_id' => $caja->id, 'factor' => 100, 'price' => 25, 'is_base' => false, 'barcode' => 'TOR-0001-CAJA']
+            ['unit_id' => $caja->id, 'factor' => 24, 'price' => 200, 'is_base' => false, 'barcode' => 'CER-0001-CAJA']
         );
 
-        $this->command->info('✅ Presentación de ejemplo creada (Tornillo: Caja x100).');
+        $this->command->info('✅ Presentación de ejemplo creada (Cerveza: Caja x24).');
     }
 }

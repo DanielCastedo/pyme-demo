@@ -12,12 +12,12 @@ class CompanySeeder extends Seeder
         Company::updateOrCreate(
             ['id' => 1], // asegura que siempre exista un único registro
             [
-                'name' => 'Ferretería Santa Rosa',
-                'legal_name' => 'Ferretería Santa Rosa S.R.L.',
+                'name' => 'Licorería Santa Rosa',
+                'legal_name' => 'Licorería Santa Rosa S.R.L.',
                 'tax_id' => null,
                 'phone' => '3-3524100',
                 'email' => null,
-                'address' => 'Av. Grigotá esq. 3er anillo interno',
+                'address' => 'Av. Monseñor Rivero esq. calle Asunta Limpias',
                 'city' => 'Santa Cruz de la Sierra',
                 'country' => 'Bolivia',
                 'currency' => 'BOB',

@@ -9,9 +9,9 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      *
-     * Ferretería con tres sucursales: Central y Norte comparten el Almacén Central y Plan 3000 tiene su propio
+     * Licorería con tres sucursales: Central y Norte comparten el Almacén Central y Plan 3000 tiene su propio
      * depósito (una caja por sucursal). Primero lo básico del sistema (usuarios, roles, menús, catálogos) y después
-     * una historia de ejemplo chica y coherente (ver cada seeder): herramientas, un juego de herramientas (kit),
+     * una historia de ejemplo chica y coherente (ver cada seeder): bebidas, un combo (kit),
      * compras, ventas en cada sucursal, un pedido y una consignación.
      * Todo se registra con los mismos servicios que usa el sistema, así el stock y el dinero cuadran.
      *
@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             CustomerSeeder::class,
 
-            // Productos: simples, con presentación (Tornillo Caja x100) y un kit (Juego de herramientas = destornilladores + alicate + tornillos)
+            // Productos: simples, con presentación (Cerveza Caja x24) y un kit (Combo Chuflay = singani + gaseosas + hielo)
             ProductSeeder::class,
             ProductUnitSeeder::class,
             ProductComponentSeeder::class,
@@ -62,7 +62,7 @@ class DatabaseSeeder extends Seeder
             ProductWarehouseSeeder::class, // stock mínimo (va después de tener stock)
             ExpenseSeeder::class,
 
-            // Ventas: kit, descuento, crédito y una venta en Norte (almacén compartido) y otra en Plan 3000; un pedido y una consignación
+            // Ventas: combo, descuento, crédito y una venta en Norte (almacén compartido) y otra en Plan 3000; un pedido y una consignación
             OrderSeeder::class,
             PedidoSeeder::class,
             ConsignmentSeeder::class,

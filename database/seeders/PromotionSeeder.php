@@ -11,7 +11,7 @@ class PromotionSeeder extends Seeder
     {
         $promotions = [
             [
-                'name' => 'Mes de la Pintura',
+                'name' => 'Mes del Vino',
                 'value' => 10.00,
                 'min_quantity' => 1,
                 'start_date' => now()->toDateString(),
@@ -19,9 +19,9 @@ class PromotionSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'name' => 'Descuento por Volumen en Tornillería',
+                'name' => 'Descuento por Volumen en Cervezas',
                 'value' => 15.00,
-                'min_quantity' => 10,
+                'min_quantity' => 24,
                 'start_date' => now()->toDateString(),
                 'end_date' => now()->addMonths(2)->toDateString(),
                 'is_active' => true,

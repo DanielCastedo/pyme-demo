@@ -23,11 +23,11 @@ class UsuariosSeeder extends Seeder
 
         $usuarios = [
             ['admin@gmail.com', 'admin', '123', BranchSeeder::CENTRAL, 'superadmin'],
-            ['encargado@ferreteriasantarosa.com', 'Jorge Suárez (Encargado)', '12345678', BranchSeeder::CENTRAL, 'admin'],
-            ['administracion@ferreteriasantarosa.com', 'Luis Justiniano (Administración)', '12345678', BranchSeeder::CENTRAL, 'admin'],
+            ['encargado@licoreriasantarosa.com', 'Jorge Suárez (Encargado)', '12345678', BranchSeeder::CENTRAL, 'admin'],
+            ['administracion@licoreriasantarosa.com', 'Luis Justiniano (Administración)', '12345678', BranchSeeder::CENTRAL, 'admin'],
             // Vende en la sucursal Norte, que saca la mercadería del Almacén Central (compartido).
-            ['operador@ferreteriasantarosa.com', 'Vendedor Norte', '12345678', BranchSeeder::NORTE, 'operador'],
-            ['plan3000@ferreteriasantarosa.com', 'Vendedor Plan 3000', '12345678', BranchSeeder::PLAN_3000, 'operador'],
+            ['operador@licoreriasantarosa.com', 'Vendedor Norte', '12345678', BranchSeeder::NORTE, 'operador'],
+            ['plan3000@licoreriasantarosa.com', 'Vendedor Plan 3000', '12345678', BranchSeeder::PLAN_3000, 'operador'],
         ];
 
         foreach ($usuarios as [$email, $name, $password, $branch, $role]) {
@@ -39,6 +39,6 @@ class UsuariosSeeder extends Seeder
             $user->syncRoles([$role]);
         }
 
-        $this->command->info('✅ Usuarios de la ferretería creados y roles asignados correctamente.');
+        $this->command->info('✅ Usuarios de la licorería creados y roles asignados correctamente.');
     }
 }

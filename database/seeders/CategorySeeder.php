@@ -10,12 +10,12 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         foreach ([
-            ['name' => 'Herramientas Manuales', 'description' => 'Martillos, destornilladores, alicates, llaves y juegos de herramientas.'],
-            ['name' => 'Herramientas Eléctricas', 'description' => 'Taladros, amoladoras, sierras y lijadoras.'],
-            ['name' => 'Tornillería y Fijaciones', 'description' => 'Tornillos, clavos, pernos, tarugos y abrazaderas.'],
-            ['name' => 'Pinturas y Accesorios', 'description' => 'Látex, esmaltes, brochas, rodillos y diluyentes.'],
-            ['name' => 'Electricidad', 'description' => 'Cables, enchufes, interruptores y focos.'],
-            ['name' => 'Plomería', 'description' => 'Tubos, codos, llaves de paso y pegamento PVC.'],
+            ['name' => 'Cervezas', 'description' => 'Nacionales e importadas, en lata y botella.'],
+            ['name' => 'Whiskys', 'description' => 'Escoceses, bourbon y blends.'],
+            ['name' => 'Rones y Vodkas', 'description' => 'Rones añejos, blancos y vodkas.'],
+            ['name' => 'Singanis y Piscos', 'description' => 'Singanis bolivianos y piscos.'],
+            ['name' => 'Vinos y Espumantes', 'description' => 'Tintos, blancos, rosados y espumantes.'],
+            ['name' => 'Bebidas sin Alcohol y Hielo', 'description' => 'Gaseosas, aguas, energizantes y hielo para acompañar.'],
         ] as $category) {
             Category::updateOrCreate(['name' => $category['name']], $category);
         }
