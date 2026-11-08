@@ -81,6 +81,135 @@
             </div>
         </div>
     @endif
+
+    @php
+        $th = 'px-3 py-2 font-semibold';
+        $baseUnit = $product->units->firstWhere('is_base', true);
+        $baseName = $baseUnit->name ?? 'unidad';
+        // El costo de compra solo lo ve quien puede editar el producto (igual que en el punto de venta).
+        $canSeeCost = auth()->user()->can('update', $product);
+        $canSeeMovements = auth()->user()->can('ver stock-movements');
+        $qty = fn ($n) => \App\Support\Bc::trim($n);
+    @endphp
+
+    {{-- Presentaciones: en qué unidades se vende y a cuánto equivale cada una --}}
+    <div class="mt-6">
+        <span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+            Presentaciones ({{ $product->units->count() }})
+        </span>
+        @if ($product->units->isEmpty())
+            <p class="text-xs text-gray-500 dark:text-gray-400">Este producto todavía no tiene presentaciones registradas.</p>
+        @else
+            <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-700">
+                <table class="w-full text-xs">
+                    <thead class="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400">
+                        <tr>
+                            <th class="text-left {{ $th }}">Presentación</th>
+                            <th class="text-left {{ $th }}">Unidad de medida</th>
+                            <th class="text-right {{ $th }}">Equivale a</th>
+                            <th class="text-right {{ $th }}">Precio</th>
+                            <th class="text-left {{ $th }}">Código de barras</th>
+                            @unless ($kitParts)
+                                <th class="text-right {{ $th }}">Stock en esta presentación</th>
+                            @endunless
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-slate-700/60">
+                        @foreach ($product->units as $unit)
+                            <tr>
+                                <td class="px-3 py-2 text-gray-900 dark:text-white font-medium">
+                                    {{ $unit->name }}
+                                    @if ($unit->is_base)
+                                        <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">base</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ $unit->unit->name ?? '—' }}</td>
+                                <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-300">{{ $unit->factor }} {{ $baseName }}</td>
+                                <td class="px-3 py-2 text-right font-semibold text-gray-900 dark:text-white">Bs {{ number_format($unit->price, 2) }}</td>
+                                <td class="px-3 py-2 font-mono text-gray-600 dark:text-gray-300">{{ $unit->barcode ?? '—' }}</td>
+                                @unless ($kitParts)
+                                    <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-300">{{ intdiv((int) $product->total_stock, max(1, $unit->factor)) }}</td>
+                                @endunless
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @unless ($kitParts)
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1.5">El stock se guarda en la presentación base ({{ $baseName }}); las demás muestran cuántas completas alcanzan.</p>
+            @endunless
+        @endif
+    </div>
+
+    {{-- Lotes: cada entrada de stock (compra, ajuste, devolución) con su costo; las ventas gastan primero el más antiguo --}}
+    @unless ($kitParts)
+        <div class="mt-6">
+            <span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">
+                Lotes con stock ({{ $activeBatches->count() }})
+            </span>
+            @if ($activeBatches->isEmpty() && $exhaustedBatches->isEmpty())
+                <p class="text-xs text-gray-500 dark:text-gray-400">Este producto todavía no tiene lotes: se crean al registrar una compra o una entrada de stock.</p>
+            @else
+                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-700">
+                    <table class="w-full text-xs">
+                        <thead class="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400">
+                            <tr>
+                                <th class="text-left {{ $th }}">#</th>
+                                <th class="text-left {{ $th }}">Ingresó</th>
+                                <th class="text-left {{ $th }}">Almacén</th>
+                                <th class="text-left {{ $th }}">Origen</th>
+                                <th class="text-right {{ $th }}">Entró</th>
+                                <th class="text-right {{ $th }}">Queda</th>
+                                @if ($canSeeCost)
+                                    <th class="text-right {{ $th }}">Costo unit.</th>
+                                    <th class="text-right {{ $th }}">Valor restante</th>
+                                @endif
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-slate-700/60">
+                            @foreach ($activeBatches->concat($exhaustedBatches) as $batch)
+                                @php
+                                    $movement = $batch->stockMovementItem?->stockMovement;
+                                    $exhausted = (float) $batch->qty_remaining <= 0;
+                                @endphp
+                                <tr class="{{ $exhausted ? 'text-gray-400 dark:text-gray-500' : ($loop->first ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : '') }}">
+                                    <td class="px-3 py-2 font-mono">{{ $batch->id }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">{{ $batch->received_at->format('d/m/Y H:i') }}</td>
+                                    <td class="px-3 py-2">{{ $batch->warehouse->name ?? '—' }}</td>
+                                    <td class="px-3 py-2">
+                                        @if ($movement && $canSeeMovements)
+                                            <a href="{{ route('stock-movements.show', $movement) }}" class="text-emerald-700 dark:text-emerald-400 hover:underline">
+                                                {{ $movement->type->name ?? 'Movimiento' }} #{{ $movement->id }}
+                                            </a>
+                                        @else
+                                            {{ $movement ? ($movement->type->name ?? 'Movimiento').' #'.$movement->id : '—' }}
+                                        @endif
+                                        @if ($movement?->note)
+                                            <span class="block text-[10px] text-gray-500 dark:text-gray-400 truncate max-w-[16rem]">{{ $movement->note }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 text-right">{{ $qty($batch->qty_initial) }}</td>
+                                    <td class="px-3 py-2 text-right font-semibold {{ $exhausted ? '' : 'text-gray-900 dark:text-white' }}">
+                                        {{ $exhausted ? 'Agotado' : $qty($batch->qty_remaining) }}
+                                    </td>
+                                    @if ($canSeeCost)
+                                        <td class="px-3 py-2 text-right">Bs {{ number_format($batch->unit_cost, 2) }}</td>
+                                        <td class="px-3 py-2 text-right">Bs {{ number_format((float) $batch->qty_remaining * (float) $batch->unit_cost, 2) }}</td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1.5">
+                    Cantidades en {{ $baseName }}. Las ventas descuentan primero del lote más antiguo de cada almacén (resaltado).
+                    @if ($exhaustedBatches->isNotEmpty())
+                        En gris, los últimos {{ $exhaustedBatches->count() }} lotes ya agotados.
+                    @endif
+                </p>
+            @endif
+        </div>
+    @endunless
 </x-ui.show-page>
 
 <x-ui.image-preview-modal />

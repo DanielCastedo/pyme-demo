@@ -106,9 +106,16 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $product->load('category', 'units', 'warehouses');
+        $product->load(['category', 'warehouses', 'units' => fn ($q) => $q->with('unit')->orderByDesc('is_base')->orderBy('factor')]);
 
-        return view('products.show', compact('product'));
+        // Lotes en el orden en que se gastan (FIFO): primero los que aún tienen stock; de los agotados, solo los últimos.
+        $batchRelations = ['warehouse:id,name', 'stockMovementItem.stockMovement.type'];
+        $activeBatches = $product->batches()->with($batchRelations)->where('qty_remaining', '>', 0)
+            ->orderBy('received_at')->orderBy('id')->get();
+        $exhaustedBatches = $product->batches()->with($batchRelations)->where('qty_remaining', '<=', 0)
+            ->orderByDesc('received_at')->orderByDesc('id')->limit(10)->get();
+
+        return view('products.show', compact('product', 'activeBatches', 'exhaustedBatches'));
     }
 
     public function edit(Product $product)

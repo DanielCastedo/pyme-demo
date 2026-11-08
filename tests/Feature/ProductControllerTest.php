@@ -272,6 +272,31 @@ describe('show y edit', function () {
             ->assertViewHas('product', fn ($p) => $p->id === $product->id);
     });
 
+    it('muestra sus presentaciones y sus lotes en orden FIFO (el costo solo a quien puede editar)', function () {
+        $this->seed(Database\Seeders\TypeSeeder::class);
+        $warehouse = \App\Models\Warehouse::factory()->create(['branche_id' => testBranch()->id, 'name' => 'Almacén Lotes']);
+        $product = Product::factory()->create(['category_id' => Category::factory()->create()->id]);
+        $base = $product->units()->create(['name' => 'Tableta', 'factor' => 1, 'price' => 0.5, 'is_base' => true, 'barcode' => 'TAB-1']);
+        $product->units()->create(['name' => 'Caja', 'factor' => 100, 'price' => 40, 'is_base' => false, 'barcode' => 'CAJA-100']);
+
+        $buyer = userWith('ver products', 'editar products');
+        $service = app(\App\Services\PurchaseService::class);
+        $service->register(['warehouse_id' => $warehouse->id, 'date' => now()->subDays(5)->toDateString()], [['product_unit_id' => $base->id, 'quantity' => 200, 'unit_cost' => 0.21]], $buyer);
+        $service->register(['warehouse_id' => $warehouse->id], [['product_unit_id' => $base->id, 'quantity' => 50, 'unit_cost' => 0.34]], $buyer);
+
+        $this->actingAs($buyer)->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSeeInOrder(['Presentaciones (2)', 'Tableta', 'Caja', '100 Tableta', 'CAJA-100'])
+            ->assertSeeInOrder(['Lotes con stock (2)', 'Almacén Lotes', '200', 'Almacén Lotes', '50'])
+            ->assertSee('Bs 0.21');
+
+        $this->actingAs(userWith('ver products'))->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSee('Lotes con stock (2)')
+            ->assertDontSee('Bs 0.21')
+            ->assertDontSee('Costo unit.');
+    });
+
     it('muestra el formulario de edición con la lista de categorías', function () {
         $this->actingAs(userWith('ver products', 'editar products'));
         $category = Category::factory()->create();
