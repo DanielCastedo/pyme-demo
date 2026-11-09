@@ -29,6 +29,8 @@
         <env name="APP_EVENTS_CACHE" value="bootstrap/cache/events.testing.php"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
+        <!-- Cobrar sin caja abierta: permitido en las pruebas, salvo las de apertura y cierre de caja (CashSessionTest). -->
+        <env name="CASH_SESSION_REQUIRED" value="false"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>

@@ -23,10 +23,12 @@ class PayableController extends Controller
 
         $payables = QueryBuilder::for($base())
             ->with('supplier')
+            ->withCount(['payments as active_payments_count' => fn ($q) => $q->where('canceled', false)])
             ->allowedFilters([
                 AllowedFilter::callback('buscar', function ($query, $value) {
                     $query->where(function ($q) use ($value) {
                         $q->where('id', ltrim($value, '#'))
+                            ->orWhere('invoice_number', 'like', "%{$value}%")
                             ->orWhereHas('supplier', fn ($s) => $s->where('name', 'like', "%{$value}%")
                                 ->orWhere('document', 'like', "%{$value}%"));
                     });

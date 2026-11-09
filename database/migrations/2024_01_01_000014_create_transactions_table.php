@@ -22,6 +22,8 @@ return new class extends Migration
             $table->foreignId('type_id')->constrained('types')->onDelete('cascade');
             $table->foreignId('payment_id')->nullable()->constrained('payments')->nullOnDelete();
             $table->foreignId('cashbox_id')->constrained('cashboxes')->onDelete('cascade');
+            // Turno de caja abierto del usuario cuando se registró (ver create_cash_sessions_table).
+            $table->foreignId('cash_session_id')->nullable()->constrained('cash_sessions')->nullOnDelete();
             $table->foreignId('branche_id')->constrained('branches')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('related_transaction_id')->nullable()->constrained('transactions')->nullOnDelete();

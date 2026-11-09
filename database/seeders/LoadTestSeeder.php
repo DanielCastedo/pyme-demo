@@ -54,6 +54,9 @@ class LoadTestSeeder extends Seeder
 
     public function run(StockMovementService $stock, PurchaseService $purchases, SaleService $sales): void
     {
+        // Datos de carga masiva: las ventas generadas no pasan por la apertura de caja de un usuario (Mi caja).
+        config(['caja.require_open_session' => false]);
+
         if (Product::where('sku', 'like', self::SKU_PREFIX.'%')->exists()) {
             $this->command->info('Ya se corrió LoadTestSeeder antes (hay productos "'.self::SKU_PREFIX.'*"), se omite.');
 

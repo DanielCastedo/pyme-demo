@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Order;
+use App\Services\CashSessionService;
 use App\Services\SaleService;
 use Database\Seeders\Concerns\UsesDemoData;
 use Illuminate\Database\Seeder;
@@ -12,18 +13,23 @@ use Illuminate\Database\Seeder;
  *  1) Un KIT al contado: se descuentan sus partes (4 gasas, 1 alcohol, 8 tabletas de paracetamol).
  *  2) Contado con descuento (Bs 5 sobre la línea): el costo sale del lote de ambroxol que vence antes (Bs 25 c/u).
  *  3) A crédito con anticipo: la clínica deja Bs 50 y queda debiendo el resto (aparece en Cuentas por cobrar).
+ *
+ * Las ventas se hacen dentro de un turno de caja (Mi caja): se abre con Bs 100 de fondo para dar cambio y al final se
+ * cierra contando el efectivo, que cuadra con lo esperado (fondo + ventas en efectivo).
  */
 class OrderSeeder extends Seeder
 {
     use UsesDemoData;
 
-    public function run(SaleService $sales): void
+    public function run(SaleService $sales, CashSessionService $cashSessions): void
     {
         if (Order::exists()) {
             $this->command->info('Ya existen ventas, se omite OrderSeeder.');
 
             return;
         }
+
+        $session = $cashSessions->open($this->admin(), $this->cashbox(), 100, 'Fondo para dar cambio');
 
         $contado = [
             'warehouse_id' => $this->warehouse()->id,
@@ -55,6 +61,9 @@ class OrderSeeder extends Seeder
             ['product_unit_id' => $this->unit('MED-0003')->id, 'quantity' => 1],
         ], $this->admin());
 
-        $this->command->info('✅ Ventas de ejemplo registradas (kit, contado con descuento y crédito).');
+        // Cierre del turno: el efectivo contado es exactamente el esperado (fondo + ventas en efectivo).
+        $cashSessions->close($session, $session->summary()['expected_cash'], $this->admin(), 'Cierre del día');
+
+        $this->command->info('✅ Ventas de ejemplo registradas (kit, contado con descuento y crédito) en un turno de caja abierto con Bs 100 y ya cerrado.');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSupplierRequest;
 use App\Models\Supplier;
+use App\Support\Bc;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -56,7 +57,21 @@ class SupplierController extends Controller
         $supplier->load(['purchases' => fn ($q) => $q->latest('id')->limit(15)]);
         $supplier->loadCount('purchases');
 
-        return view('suppliers.show', compact('supplier'));
+        // Estado de cuenta: cada factura a crédito vigente con sus pagos (y N° de recibo) y lo que queda por pagar.
+        $creditPurchases = $supplier->purchases()
+            ->where('payment_type', \App\Models\Purchase::PAYMENT_CREDIT)
+            ->where('status', '!=', \App\Models\Purchase::STATUS_CANCELED)
+            ->with(['payments' => fn ($q) => $q->where('canceled', false)->with('transaction.paymentMethod')->oldest('id')])
+            ->latest('date')->latest('id')
+            ->get();
+
+        $statement = [
+            'total' => Bc::round(Bc::sum($creditPurchases->pluck('amount')), 2),
+            'paid' => Bc::round(Bc::sum($creditPurchases->pluck('paid_amount')), 2),
+        ];
+        $statement['balance'] = Bc::round(Bc::sub($statement['total'], $statement['paid']), 2);
+
+        return view('suppliers.show', compact('supplier', 'creditPurchases', 'statement'));
     }
 
     public function edit(Supplier $supplier)

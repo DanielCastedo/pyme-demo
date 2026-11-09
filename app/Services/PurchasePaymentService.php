@@ -21,13 +21,18 @@ class PurchasePaymentService
     public function __construct(private readonly TransactionService $transactions) {}
 
     /**
-     * @throws \RuntimeException si la compra no admite el pago, el monto pasa del saldo o la caja no corresponde.
+     * @param  string|null  $receiptNumber  N° del recibo que entrega el proveedor: no se puede registrar dos veces el mismo
+     *                                      recibo del mismo proveedor (así un pago no se carga doble).
+     *
+     * @throws \RuntimeException si la compra no admite el pago, el monto pasa del saldo, la caja no corresponde o el
+     *                           recibo ya está registrado.
      */
-    public function pay(Purchase $purchase, int|float|string $amount, PaymentMethod $payment, Cashbox $cashbox, User $user): PurchasePayment
+    public function pay(Purchase $purchase, int|float|string $amount, PaymentMethod $payment, Cashbox $cashbox, User $user, ?string $receiptNumber = null, ?string $note = null): PurchasePayment
     {
-        return DB::transaction(function () use ($purchase, $amount, $payment, $cashbox, $user) {
+        return DB::transaction(function () use ($purchase, $amount, $payment, $cashbox, $user, $receiptNumber, $note) {
             $purchase = Purchase::with('supplier')->lockForUpdate()->findOrFail($purchase->id);
             $amount = Bc::round($amount, 2);
+            $receiptNumber = filled($receiptNumber) ? trim($receiptNumber) : null;
 
             if (! $purchase->isCredit()) {
                 throw new \RuntimeException('Solo se puede registrar un pago sobre una compra a crédito.');
@@ -49,6 +54,17 @@ class PurchasePaymentService
                 throw new \RuntimeException('La caja seleccionada no pertenece a la sucursal de la compra.');
             }
 
+            if ($receiptNumber !== null && ($duplicate = $this->registeredReceipt($purchase, $receiptNumber))) {
+                throw new \RuntimeException(sprintf(
+                    'El recibo N° %s%s ya está registrado: pago de %s del %s en la compra #%d. Si es otro recibo, revisa el número.',
+                    $receiptNumber,
+                    $purchase->supplier ? ' de '.$purchase->supplier->name : '',
+                    number_format((float) $duplicate->amount, 2),
+                    $duplicate->created_at->format('d/m/Y'),
+                    $duplicate->purchase_id
+                ));
+            }
+
             $transaction = $this->transactions->register([
                 'type_id' => Type::where('code', 'COM')->firstOrFail()->id,
                 'payment_id' => $payment->id,
@@ -62,6 +78,8 @@ class PurchasePaymentService
                 'transaction_id' => $transaction->id,
                 'user_id' => $user->id,
                 'amount' => $amount,
+                'receipt_number' => $receiptNumber,
+                'note' => filled($note) ? trim($note) : null,
             ]);
 
             $purchase->update(['paid_amount' => Bc::round(Bc::add($purchase->paid_amount, $amount), 2)]);
@@ -108,6 +126,22 @@ class PurchasePaymentService
         }
 
         $purchase->update(['paid_amount' => 0]);
+    }
+
+    /**
+     * Pago vigente con ese N° de recibo del mismo proveedor (en cualquiera de sus compras); sin proveedor, en la misma
+     * compra. Sin distinguir mayúsculas.
+     */
+    private function registeredReceipt(Purchase $purchase, string $receiptNumber): ?PurchasePayment
+    {
+        return PurchasePayment::where('canceled', false)
+            ->whereRaw('LOWER(receipt_number) = ?', [mb_strtolower($receiptNumber)])
+            ->when(
+                $purchase->supplier_id,
+                fn ($q) => $q->whereHas('purchase', fn ($p) => $p->where('supplier_id', $purchase->supplier_id)),
+                fn ($q) => $q->where('purchase_id', $purchase->id)
+            )
+            ->first();
     }
 
     private function revert(PurchasePayment $payment): void

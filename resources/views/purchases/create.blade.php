@@ -263,6 +263,8 @@
                             <div id="initial-payment-field" class="hidden">
                                 <label class="{{ $label }}">Monto del anticipo</label>
                                 <input type="number" step="0.01" min="0" name="initial_payment" id="initial-payment" value="{{ old('initial_payment') }}" placeholder="0.00" class="{{ $field }}">
+                                <label class="{{ $label }} mt-3">N° de recibo del anticipo (opcional)</label>
+                                <input type="text" name="initial_receipt_number" maxlength="50" value="{{ old('initial_receipt_number') }}" placeholder="Ej. REC-0458" class="{{ $field }}">
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>

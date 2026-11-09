@@ -10,6 +10,7 @@
             <thead class="bg-gray-50 dark:bg-slate-800/60 text-gray-500 dark:text-gray-400 uppercase">
                 <tr>
                     <th class="px-3 py-2 text-left">Fecha</th>
+                    <th class="px-3 py-2 text-left">Recibo</th>
                     <th class="px-3 py-2 text-left">Transacción</th>
                     <th class="px-3 py-2 text-left">Método</th>
                     <th class="px-3 py-2 text-left">Caja</th>
@@ -23,6 +24,12 @@
                 @forelse ($purchase->payments as $payment)
                     <tr class="{{ $payment->canceled ? 'opacity-50 line-through' : '' }}">
                         <td class="px-3 py-2 text-gray-800 dark:text-gray-200" data-label="Fecha">{{ $payment->created_at->format('d/m/Y H:i') }}</td>
+                        <td class="px-3 py-2 text-gray-800 dark:text-gray-200" data-label="Recibo">
+                            <span class="font-mono">{{ $payment->receipt_number ?? '—' }}</span>
+                            @if ($payment->note)
+                                <span class="block text-[10px] text-gray-500 dark:text-gray-400">{{ $payment->note }}</span>
+                            @endif
+                        </td>
                         <td class="px-3 py-2 font-mono text-gray-800 dark:text-gray-200" data-label="Transacción">{{ $payment->transaction->number }}</td>
                         <td class="px-3 py-2 text-gray-800 dark:text-gray-200" data-label="Método">{{ $payment->transaction->paymentMethod->name ?? '—' }}</td>
                         <td class="px-3 py-2 text-gray-800 dark:text-gray-200" data-label="Caja">{{ $payment->transaction->cashbox->name }}</td>
@@ -44,7 +51,7 @@
                     </tr>
                 @empty
                     <tr class="rtable-empty">
-                        <td colspan="8" class="px-3 py-4 text-center text-gray-400">Todavía no se pagó nada de esta compra.</td>
+                        <td colspan="9" class="px-3 py-4 text-center text-gray-400">Todavía no se pagó nada de esta compra.</td>
                     </tr>
                 @endforelse
             </tbody>

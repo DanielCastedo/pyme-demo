@@ -51,6 +51,12 @@ class Cashbox extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    /** Turnos de apertura y cierre de esta caja (uno por usuario y día de trabajo). */
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(CashSession::class);
+    }
+
     /**
      * Total acumulado por tipo de transacción (solo las vigentes, no las anuladas),
      * opcionalmente dentro de un rango de fechas. Se calcula desde `transactions`

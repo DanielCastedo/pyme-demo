@@ -27,7 +27,9 @@ class PurchasePaymentController extends Controller
                 Bc::num($data['amount']),
                 PaymentMethod::findOrFail($data['payment_id']),
                 Cashbox::findOrFail($data['cashbox_id']),
-                $request->user()
+                $request->user(),
+                $data['receipt_number'] ?? null,
+                $data['note'] ?? null
             );
         } catch (\RuntimeException $e) {
             return back()->withInput()->with('error', $e->getMessage());

@@ -53,6 +53,8 @@ class PurchaseService
                 $date->setTimeFrom(now());
             }
 
+            $this->guardDuplicateInvoice($supplier, $data['invoice_number'] ?? null);
+
             $purchase = Purchase::create([
                 'date' => $date,
                 'supplier_id' => $supplier?->id,
@@ -86,11 +88,39 @@ class PurchaseService
             $purchase->save();
 
             if ($credit !== null && Bc::gt($credit['collect_now'], 0)) {
-                $this->payments->pay($purchase, $credit['collect_now'], $credit['payment'], $credit['cashbox'], $user);
+                $this->payments->pay($purchase, $credit['collect_now'], $credit['payment'], $credit['cashbox'], $user, $data['initial_receipt_number'] ?? null);
             }
 
             return $purchase->refresh();
         });
+    }
+
+    /**
+     * La misma factura de un proveedor no se registra dos veces (una factura cargada doble termina pagándose doble).
+     *
+     * @throws \RuntimeException si ese proveedor ya tiene una compra vigente con ese N° de factura.
+     */
+    private function guardDuplicateInvoice(?Supplier $supplier, ?string $invoiceNumber): void
+    {
+        if (! $supplier || blank($invoiceNumber)) {
+            return;
+        }
+
+        $existing = Purchase::where('supplier_id', $supplier->id)
+            ->where('status', '!=', Purchase::STATUS_CANCELED)
+            ->whereRaw('LOWER(invoice_number) = ?', [mb_strtolower(trim($invoiceNumber))])
+            ->first();
+
+        if ($existing) {
+            throw new \RuntimeException(sprintf(
+                'La factura %s de %s ya está registrada en la compra #%d (%s, %s). Para agregarle productos, ábrela y usa "Agregar productos".',
+                trim($invoiceNumber),
+                $supplier->name,
+                $existing->id,
+                $existing->date->format('d/m/Y'),
+                number_format((float) $existing->amount, 2)
+            ));
+        }
     }
 
     /**

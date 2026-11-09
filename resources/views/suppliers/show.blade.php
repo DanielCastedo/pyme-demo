@@ -60,4 +60,70 @@
             </table>
         </div>
     </div>
+
+    {{-- Estado de cuenta: cada factura a crédito con sus pagos (y el N° de recibo de cada uno) y lo que queda por pagar --}}
+    @if ($creditPurchases->isNotEmpty())
+        @php $money = fn ($n) => number_format((float) $n, 2); @endphp
+        <div class="mt-8">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-3">Estado de cuenta (compras a crédito)</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Facturado a crédito</span>
+                    <span class="text-lg font-extrabold text-gray-900 dark:text-white">{{ $money($statement['total']) }}</span>
+                </div>
+                <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pagado</span>
+                    <span class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">{{ $money($statement['paid']) }}</span>
+                </div>
+                <div class="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Saldo pendiente</span>
+                    <span class="text-lg font-extrabold {{ \App\Support\Bc::gt($statement['balance'], 0) ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white' }}">{{ $money($statement['balance']) }}</span>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto border border-gray-100 dark:border-gray-800 rounded-lg">
+                <table class="w-full text-xs">
+                    <thead class="bg-gray-50 dark:bg-slate-800/60 text-gray-500 dark:text-gray-400 uppercase">
+                        <tr>
+                            <th class="px-3 py-2 text-left">Factura / Recibo</th>
+                            <th class="px-3 py-2 text-left">Fecha</th>
+                            <th class="px-3 py-2 text-left">Detalle</th>
+                            <th class="px-3 py-2 text-right">Cargo</th>
+                            <th class="px-3 py-2 text-right">Pago</th>
+                            <th class="px-3 py-2 text-right">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                        @foreach ($creditPurchases as $purchase)
+                            @php $running = $purchase->amount; @endphp
+                            <tr class="bg-gray-50/60 dark:bg-slate-800/30">
+                                <td class="px-3 py-2 font-semibold text-gray-900 dark:text-white">
+                                    <a href="{{ route('purchases.show', $purchase) }}" class="hover:underline">Factura {{ $purchase->invoice_number ?: 'sin número' }}</a>
+                                    <span class="block text-[10px] font-normal text-gray-500">Compra #{{ $purchase->id }}</span>
+                                </td>
+                                <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ $purchase->date_label }}</td>
+                                <td class="px-3 py-2 text-gray-700 dark:text-gray-300">Vence {{ $purchase->due_label }} · {{ $purchase->payment_status_label }}</td>
+                                <td class="px-3 py-2 text-right font-mono text-gray-900 dark:text-white">{{ $money($purchase->amount) }}</td>
+                                <td class="px-3 py-2"></td>
+                                <td class="px-3 py-2 text-right font-mono font-semibold text-gray-900 dark:text-white">{{ $money($running) }}</td>
+                            </tr>
+                            @foreach ($purchase->payments as $payment)
+                                @php $running = \App\Support\Bc::round(\App\Support\Bc::sub($running, $payment->amount), 2); @endphp
+                                <tr>
+                                    <td class="px-3 py-2 pl-6 font-mono text-gray-700 dark:text-gray-300">{{ $payment->receipt_number ? 'Recibo '.$payment->receipt_number : 'Sin N° de recibo' }}</td>
+                                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ $payment->created_at->format('d/m/Y') }}</td>
+                                    <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ $payment->transaction->paymentMethod->name ?? 'Pago' }}{{ $payment->note ? ' · '.$payment->note : '' }}</td>
+                                    <td class="px-3 py-2"></td>
+                                    <td class="px-3 py-2 text-right font-mono text-emerald-600 dark:text-emerald-400">{{ $money($payment->amount) }}</td>
+                                    <td class="px-3 py-2 text-right font-mono text-gray-700 dark:text-gray-300">{{ $money($running) }}</td>
+                                </tr>
+                            @endforeach
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1.5">Cada pago aparece debajo de su factura con el N° de recibo del proveedor. No se puede pagar más que el saldo de una factura, ni registrar dos veces el mismo recibo o la misma factura.</p>
+        </div>
+    @endif
 </x-ui.show-page>

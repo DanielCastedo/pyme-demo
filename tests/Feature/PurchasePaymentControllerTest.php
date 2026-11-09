@@ -114,7 +114,7 @@ describe('pago de compras a crédito (store)', function () {
         $user = userWith('ver purchases', 'compras.pagar');
         $this->actingAs($user);
         $purchase = creditPurchaseFor();
-        $payload = validPurchasePaymentPayload($purchase);
+        $payload = validPurchasePaymentPayload($purchase) + ['receipt_number' => 'REC-0458', 'note' => 'Transferencia'];
 
         $mockService = mock(PurchasePaymentService::class);
         $mockService->shouldReceive('pay')->once()->with(
@@ -122,7 +122,9 @@ describe('pago de compras a crédito (store)', function () {
             50.0,
             Mockery::on(fn ($arg) => $arg->id === (int) $payload['payment_id']),
             Mockery::on(fn ($arg) => $arg->id === (int) $payload['cashbox_id']),
-            Mockery::on(fn ($arg) => $arg->id === $user->id)
+            Mockery::on(fn ($arg) => $arg->id === $user->id),
+            'REC-0458',
+            'Transferencia'
         );
         $this->app->instance(PurchasePaymentService::class, $mockService);
 

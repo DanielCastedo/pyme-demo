@@ -190,6 +190,18 @@
                         </div>
                     @else
                     {{-- Cómo paga --}}
+                    {{-- Mi caja: se cobra en la caja que el usuario abrió (con su fondo inicial) --}}
+                    @if ($cashSession ?? null)
+                        <p class="text-[11px] text-emerald-700 dark:text-emerald-400">
+                            Cobras en tu caja <strong>{{ $cashSession->cashbox->name }}</strong> (abierta {{ $cashSession->opened_at->format('d/m H:i') }}) ·
+                            <a href="{{ route('cash-sessions.index') }}" class="font-semibold hover:underline">Mi caja</a>
+                        </p>
+                    @elseif ($cashSessionRequired ?? false)
+                        <p class="p-2 rounded-lg border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-900/20 text-xs text-amber-800 dark:text-amber-300">
+                            Para cobrar, primero abre tu caja con el fondo para dar cambio:
+                            <a href="{{ route('cash-sessions.index') }}" class="font-semibold underline">Abrir mi caja</a>
+                        </p>
+                    @endif
                     <div id="payment-block">
                         {{-- Un método, o pago mixto (ej. parte por QR y parte en efectivo) --}}
                         <x-ui.payment-split :methods="$paymentMethods" id="payment-id" />
@@ -493,7 +505,9 @@
                 const old = {
                     items: @json(old('items', $initialItems)),
                     warehouse: @json(old('warehouse_id', $initialWarehouseId)),
-                    cashbox: @json(old('cashbox_id')),
+                    cashbox: @json(old('cashbox_id', ($cashSession ?? null)?->cashbox_id)),
+                    // Con la caja abierta, la sucursal es la de esa caja (si no, la caja no aparecería en la lista).
+                    sessionBranch: @json(($cashSession ?? null)?->cashbox?->branche_id),
                     branch: @json($defaultBranchId),
                     customer: @json(old('customer_id', $initialCustomerId)),
                 };
@@ -1513,7 +1527,7 @@
                 // El almacén guardado en este navegador solo se usa en un formulario nuevo (no si viene
                 // de un error de validación, ni al editar un pedido que ya tiene su propio almacén).
                 const savedLocation = old.warehouse ? null : loadSavedLocation();
-                branchSel.value = savedLocation?.branch ?? old.branch ?? branchSel.value;
+                branchSel.value = old.sessionBranch ?? savedLocation?.branch ?? old.branch ?? branchSel.value;
                 applyBranch(old.warehouse || savedLocation?.warehouse, old.cashbox || savedLocation?.cashbox);
                 // Las líneas ya elegidas (venir de un error de validación, o editar un pedido) se piden
                 // puntualmente por id: no hace falta ni tiene sentido pedir el catálogo entero para esto.

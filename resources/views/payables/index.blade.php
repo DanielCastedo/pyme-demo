@@ -17,7 +17,7 @@
 
         <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-3">
             <div class="flex-1">
-                <x-ui.search-box placeholder="Buscar por N° de compra o proveedor..." filterName="buscar" />
+                <x-ui.search-box placeholder="Buscar por N° de compra, factura o proveedor..." filterName="buscar" />
             </div>
             @if (request('filter.vencidas'))
                 <a href="{{ route('payables.index', request()->except('filter.vencidas', 'page')) }}">
@@ -34,10 +34,12 @@
             $columns = [
                 ['key' => 'id', 'label' => 'Compra'],
                 ['key' => 'supplier_label', 'label' => 'Proveedor'],
+                ['key' => 'invoice_number', 'label' => 'Factura'],
                 ['key' => 'date_label', 'label' => 'Fecha'],
                 ['key' => 'due_label', 'label' => 'Vence'],
                 ['key' => 'amount_label', 'label' => 'Total'],
                 ['key' => 'paid_label', 'label' => 'Pagado'],
+                ['key' => 'active_payments_count', 'label' => 'Pagos'],
                 ['key' => 'balance_label', 'label' => 'Saldo'],
                 ['key' => 'payment_status_label', 'label' => 'Estado'],
             ];

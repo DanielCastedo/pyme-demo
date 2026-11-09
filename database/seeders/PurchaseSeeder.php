@@ -52,6 +52,7 @@ class PurchaseSeeder extends Seeder
             'payment_type' => 'credit',
             'due_date' => now()->addDays(30)->toDateString(),
             'initial_payment' => 50,
+            'initial_receipt_number' => 'REC-1201', // recibo que entregó el proveedor por el anticipo
             'payment_id' => $this->cash()->id,
             'cashbox_id' => $this->cashbox()->id,
         ], [

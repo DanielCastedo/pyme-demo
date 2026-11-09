@@ -17,6 +17,8 @@ class StorePurchasePaymentRequest extends FormRequest
             'amount' => 'required|numeric|min:0.01',
             'payment_id' => 'required|exists:payments,id',
             'cashbox_id' => 'required|exists:cashboxes,id',
+            'receipt_number' => 'nullable|string|max:50',
+            'note' => 'nullable|string|max:255',
         ];
     }
 
@@ -27,6 +29,7 @@ class StorePurchasePaymentRequest extends FormRequest
             'amount.min' => 'El monto del pago debe ser mayor a 0.',
             'payment_id.required' => 'Selecciona el método de pago.',
             'cashbox_id.required' => 'Selecciona la caja de donde sale el dinero.',
+            'receipt_number.max' => 'El N° de recibo no debe superar los 50 caracteres.',
         ];
     }
 }

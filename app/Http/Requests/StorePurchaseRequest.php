@@ -31,6 +31,7 @@ class StorePurchaseRequest extends FormRequest
             'payment_type' => 'required|in:cash,credit',
             'due_date' => 'nullable|required_if:payment_type,credit|date|after:today',
             'initial_payment' => 'nullable|numeric|min:0',
+            'initial_receipt_number' => 'nullable|string|max:50', // N° de recibo del proveedor por el anticipo
             'pay_now' => 'boolean',
             'payment_id' => 'required_if:pay_now,1|nullable|exists:payments,id',
             'cashbox_id' => 'required_if:pay_now,1|nullable|exists:cashboxes,id',

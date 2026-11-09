@@ -5,6 +5,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CashboxController;
+use App\Http\Controllers\CashSessionController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ConsignmentController;
 use App\Http\Controllers\PayableController;
@@ -198,6 +199,14 @@ Route::middleware(['auth:sanctum', 'verified', 'subscription', 'terms'])->group(
     // buscador no muestra nada que esas pantallas no muestren ya.
     Route::get('pos/products/search', [PosSearchController::class, 'search'])->name('pos.products.search');
     Route::get('pos/customers/search', [PosSearchController::class, 'searchCustomers'])->name('pos.customers.search');
+
+    // ── Mi caja: apertura (fondo inicial) y cierre (arqueo) por usuario ─────────
+    Route::middleware(['permission:crear sales|ver cashboxes'])->group(function () {
+        Route::get('mi-caja', [CashSessionController::class, 'index'])->name('cash-sessions.index');
+        Route::post('mi-caja', [CashSessionController::class, 'store'])->name('cash-sessions.store');
+        Route::get('mi-caja/{cashSession}', [CashSessionController::class, 'show'])->name('cash-sessions.show');
+        Route::post('mi-caja/{cashSession}/cerrar', [CashSessionController::class, 'close'])->name('cash-sessions.close');
+    });
 
     // ── Ventas: registro rápido de ventas (orden + stock FIFO + cobro en caja) ─────────
     Route::middleware(['permission:ver sales'])->group(function () {

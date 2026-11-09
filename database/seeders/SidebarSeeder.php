@@ -68,6 +68,7 @@ class SidebarSeeder extends Seeder
             'rol_requerido' => null,
             'permiso_requerido' => null,
             'children' => [
+                ['nombre' => 'Mi caja', 'ruta' => 'cash-sessions.index', 'orden' => 0, 'rol_requerido' => null, 'permiso_requerido' => 'crear sales'],
                 ['nombre' => 'Ventas', 'ruta' => 'sales.index', 'orden' => 1, 'rol_requerido' => null, 'permiso_requerido' => 'ver sales'],
                 ['nombre' => 'Pedidos', 'ruta' => 'pedidos.index', 'orden' => 2, 'rol_requerido' => null, 'permiso_requerido' => 'ver orders'],
                 ['nombre' => 'Cuentas por cobrar', 'ruta' => 'receivables.index', 'orden' => 3, 'rol_requerido' => null, 'permiso_requerido' => 'ver sales'],

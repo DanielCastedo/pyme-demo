@@ -22,6 +22,7 @@ class Transaction extends Model
         'type_id',
         'payment_id',
         'cashbox_id',
+        'cash_session_id',
         'branche_id',
         'user_id',
         'related_transaction_id',
@@ -56,6 +57,12 @@ class Transaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    /** Turno de caja abierto del usuario cuando se registró (null si no tenía uno). */
+    public function cashSession(): BelongsTo
+    {
+        return $this->belongsTo(CashSession::class);
     }
 
     public function relatedTransaction(): BelongsTo

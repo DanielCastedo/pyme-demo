@@ -15,6 +15,8 @@ class PurchasePayment extends Model
         'transaction_id',
         'user_id',
         'amount',
+        'receipt_number',
+        'note',
         'canceled',
     ];
 

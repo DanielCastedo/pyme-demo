@@ -155,13 +155,16 @@
                     Saldo pendiente: <strong>{{ $purchase->balance_label }}</strong> · Vence: <strong>{{ $purchase->due_label }}</strong>
                 </p>
 
-                <form action="{{ route('purchases.payments.store', $purchase) }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <form action="{{ route('purchases.payments.store', $purchase) }}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                     @csrf
                     <x-ui.form-field type="number" name="amount" label="Monto a pagar" required :value="old('amount', $purchase->balance)" />
                     <x-ui.form-field type="select" name="payment_id" label="Método de pago" required
                         :options="$paymentMethods->pluck('name', 'id')->toArray()" />
                     <x-ui.form-field type="select" name="cashbox_id" label="Caja" required
                         :options="$cashboxes->pluck('name', 'id')->toArray()" />
+                    {{-- El mismo recibo del proveedor no se acepta dos veces: así un pago no se carga doble --}}
+                    <x-ui.form-field type="text" name="receipt_number" label="N° de recibo del proveedor" :value="old('receipt_number')" placeholder="Ej. REC-0458" />
+                    <x-ui.form-field type="text" name="note" label="Nota (opcional)" :value="old('note')" placeholder="Ej. pagado por transferencia" />
                     <x-ui.button type="submit" variant="primary" :fullWidth="true">Registrar pago</x-ui.button>
                 </form>
             </div>

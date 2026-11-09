@@ -63,6 +63,8 @@ return new class extends Migration
         Schema::create('purchase_payments', function (Blueprint $table) {
             $table->id();
             $table->decimal('amount', 12, 2);
+            $table->string('receipt_number', 50)->nullable(); // N° del recibo que entrega el proveedor por este pago
+            $table->string('note', 255)->nullable();
             $table->boolean('canceled')->default(false);
             $table->foreignId('purchase_id')->constrained('purchases')->cascadeOnDelete();
             $table->foreignId('transaction_id')->constrained('transactions')->restrictOnDelete();

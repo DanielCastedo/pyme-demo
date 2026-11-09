@@ -40,6 +40,9 @@ class PosFormData
             'cashboxes' => Cashbox::orderBy('name')->get(['id', 'name', 'branche_id']),
             'paymentMethods' => PaymentMethod::orderByDesc('is_cash')->orderBy('name')->get(['id', 'name', 'is_cash']),
             'defaultBranchId' => $user->branche_id ?? $branches->first()?->id,
+            // Turno de caja abierto del usuario (Mi caja): el POS cobra en esa caja.
+            'cashSession' => \App\Models\CashSession::openFor($user->id)?->load('cashbox'),
+            'cashSessionRequired' => (bool) config('caja.require_open_session'),
             'canEditPrice' => $user->can('ventas.editar-precio'),
             'canDiscount' => $user->can('ventas.descuento'),
             'canCredit' => $user->can('ventas.credito'),

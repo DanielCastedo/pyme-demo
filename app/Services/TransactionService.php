@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\Bc;
+use App\Models\CashSession;
 use App\Models\Cashbox;
 use App\Models\PaymentMethod;
 use App\Models\Transaction;
@@ -39,6 +40,7 @@ class TransactionService
             }
 
             $cashbox = Cashbox::lockForUpdate()->findOrFail($data['cashbox_id']);
+            $session = $this->sessionFor($type, $cashbox, (int) $data['user_id']);
 
             $this->applyToCashbox($cashbox, $payment, $type->sign === '+' ? $amount : Bc::sub(0, $amount));
 
@@ -51,6 +53,7 @@ class TransactionService
                 'type_id' => $type->id,
                 'payment_id' => $payment->id,
                 'cashbox_id' => $cashbox->id,
+                'cash_session_id' => $session?->id,
                 'branche_id' => $cashbox->branche_id,
                 'user_id' => $data['user_id'],
                 'related_transaction_id' => $data['related_transaction_id'] ?? null,
@@ -82,6 +85,30 @@ class TransactionService
 
             return $transaction;
         });
+    }
+
+    /**
+     * Turno de caja abierto del usuario en esta caja, al que se enlaza el movimiento (null si no tiene uno).
+     * Cobrar una venta exige tener la caja abierta (config caja.require_open_session); gastos y pagos a proveedores
+     * no lo exigen, pero si hay un turno abierto también quedan en él.
+     *
+     * @throws \RuntimeException si es una venta y el usuario no tiene su caja abierta (o la tiene abierta en otra caja).
+     */
+    private function sessionFor(Type $type, Cashbox $cashbox, int $userId): ?CashSession
+    {
+        $session = CashSession::openFor($userId);
+
+        if ($session && (int) $session->cashbox_id === (int) $cashbox->id) {
+            return $session;
+        }
+
+        if ($type->code === 'VTA' && config('caja.require_open_session')) {
+            throw new \RuntimeException($session
+                ? "Tu caja abierta es \"{$session->cashbox->name}\": cobra en esa caja o ciérrala antes de cobrar en \"{$cashbox->name}\"."
+                : "Abre tu caja antes de cobrar (Ventas → Mi caja): así el cobro queda en tu turno de \"{$cashbox->name}\".");
+        }
+
+        return null;
     }
 
     /**
