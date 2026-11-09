@@ -82,7 +82,7 @@ class ProductExcelController extends Controller
         $message = "Importación completada: {$import->created} producto(s) creado(s) y {$import->updated} actualizado(s).";
 
         if ($import->stockLoaded > 0) {
-            $message .= " Se cargó stock inicial en {$import->stockLoaded} producto(s).";
+            $message .= " Se cargó stock inicial en {$import->stockLoaded} lote(s).";
         }
 
         if ($import->skipped > 0) {

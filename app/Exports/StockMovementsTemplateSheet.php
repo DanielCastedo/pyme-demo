@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -29,22 +30,24 @@ class StockMovementsTemplateSheet implements FromArray, ShouldAutoSize, WithColu
 
     public function headings(): array
     {
-        return ['sku', 'tipo', 'cantidad', 'unidad', 'costo_unitario'];
+        return ['sku', 'tipo', 'cantidad', 'unidad', 'costo_unitario', 'lote', 'vence'];
     }
 
     public function array(): array
     {
-        $a = $this->samples[0] ?? ['sku' => 'MAR-0001', 'unit' => 'Unidad', 'big_unit' => null];
-        $b = $this->samples[1] ?? ['sku' => 'MAR-0002', 'unit' => 'Unidad', 'big_unit' => 'Caja'];
+        // Productos reales del sistema; si hay menos de tres se repiten (un código inventado no existiría al importar).
+        $a = $this->samples[0] ?? ['sku' => 'MED-0002', 'unit' => 'Frasco', 'big_unit' => null];
+        $b = $this->samples[1] ?? $a;
         $c = $this->samples[2] ?? $a;
+        $date = fn (int $months) => ExcelDate::PHPToExcel(now()->addMonths($months)->endOfMonth()->startOfDay());
 
         return [
-            // Entrada de 100 unidades a 35.50 c/u (la unidad se puede dejar vacía: usa la base)
-            [$a['sku'], 'entrada', 100, $a['unit'], 35.50],
-            // Entrada por presentación: 5 cajas (o la presentación que tenga) a 480 cada una
-            [$b['sku'], 'entrada', 5, $b['big_unit'] ?? $b['unit'], 480.00],
-            // Salida (ajuste, merma...): no lleva costo, sale por FIFO
-            [$c['sku'], 'salida', 2, '', ''],
+            // Entrada de 20 unidades a 22.00 c/u, con su lote y vencimiento (la unidad se puede dejar vacía: usa la base)
+            [$a['sku'], 'entrada', 20, $a['unit'], 22.00, 'L2405', $date(8)],
+            // Entrada por presentación: 5 cajas (o la presentación que tenga) a 25.00 cada una, sin lote ni vencimiento
+            [$b['sku'], 'entrada', 5, $b['big_unit'] ?? $b['unit'], 25.00, '', ''],
+            // Salida (ajuste, merma, vencido...): no lleva costo ni lote; descuenta primero lo que vence antes
+            [$c['sku'], 'salida', 2, '', '', '', ''],
         ];
     }
 
@@ -54,6 +57,8 @@ class StockMovementsTemplateSheet implements FromArray, ShouldAutoSize, WithColu
             'A' => NumberFormat::FORMAT_TEXT,
             'C' => '0',
             'E' => '#,##0.00',
+            'F' => NumberFormat::FORMAT_TEXT,
+            'G' => 'dd/mm/yyyy',
         ];
     }
 
@@ -106,10 +111,24 @@ class StockMovementsTemplateSheet implements FromArray, ShouldAutoSize, WithColu
                     ->setError('El costo debe ser un número mayor o igual a 0.')
                     ->setFormula1('0');
 
+                $expires = (new DataValidation())
+                    ->setType(DataValidation::TYPE_DATE)
+                    ->setOperator(DataValidation::OPERATOR_GREATERTHAN)
+                    ->setErrorStyle(DataValidation::STYLE_STOP)
+                    ->setAllowBlank(true)
+                    ->setShowInputMessage(true)
+                    ->setShowErrorMessage(true)
+                    ->setPromptTitle('vence')
+                    ->setPrompt('Opcional, solo en entradas. Fecha de vencimiento del lote (dd/mm/aaaa).')
+                    ->setErrorTitle('Fecha no válida')
+                    ->setError('Escribe una fecha, por ejemplo 31/12/2027.')
+                    ->setFormula1('1');
+
                 for ($row = 2; $row <= $last; $row++) {
                     $sheet->getCell("B{$row}")->setDataValidation(clone $type);
                     $sheet->getCell("C{$row}")->setDataValidation(clone $quantity);
                     $sheet->getCell("E{$row}")->setDataValidation(clone $cost);
+                    $sheet->getCell("G{$row}")->setDataValidation(clone $expires);
                 }
             },
         ];

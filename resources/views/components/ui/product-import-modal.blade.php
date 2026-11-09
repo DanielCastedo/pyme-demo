@@ -29,7 +29,7 @@
                     help="A este almacén entra el stock inicial (columna Cantidad) de todo el archivo." />
 
                 <x-ui.form-field type="file" name="file" label="Archivo Excel" required
-                    help="Solo .xlsx — máx 20MB. Columnas: Codigo, Item, Cantidad, Precio Venta U, Precio Compra U, Unidad, Color, Marca, Foto (imagen pegada en la celda), Medida, Categoria, Importado. Si el Código ya existe se actualiza el producto; si no, se crea. La Categoria es opcional: si la escribes se usa (se crea si no existe); vacía en un producto nuevo cae en «Importación General». Si una fila (no marcada «Importado») falla, no se importa nada." />
+                    help="Solo .xlsx — máx 20MB. Columnas: Codigo, Item, Cantidad, Precio Venta U, Precio Compra U, Unidad, Color, Marca, Foto (imagen pegada en la celda), Medida, Categoria, Descripcion, Importado, Lote, Vence, Presentacion, Contiene y Precio Presentacion. Si el Código ya existe se actualiza el producto; si no, se crea. Repite el Código en otra fila para cargar otro lote (con su costo, Lote y Vence). La Categoria es opcional: si la escribes se usa (se crea si no existe); vacía en un producto nuevo cae en «Importación General». Si una fila (no marcada «Importado») falla, no se importa nada." />
 
                 <div class="mt-6 pt-4 border-t border-gray-100 dark:border-slate-800 flex justify-end gap-2">
                     <x-ui.button type="button" variant="outline" data-modal-close="product-import-modal">Cancelar</x-ui.button>

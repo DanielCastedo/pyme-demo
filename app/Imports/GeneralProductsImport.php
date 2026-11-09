@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Services\ImageOptimizer;
 use App\Services\StockMovementService;
 use App\Support\Bc;
+use App\Support\ExcelDate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -31,6 +32,13 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  *
  * "Importado" es control del propio usuario: una fila con algo escrito ahí se salta (para poder volver a
  * subir el mismo archivo maestro sin duplicar lo ya cargado); vacía = se procesa.
+ *
+ * Lotes: Lote y Vence (opcionales) van al lote que crea la Cantidad de la fila. Un mismo Código puede repetirse
+ * en varias filas: la primera define el producto y cada fila repetida es OTRO lote del mismo producto (con su
+ * Cantidad, Precio Compra U, Lote y Vence); en esas filas Item y Precio Venta U pueden ir vacíos o iguales.
+ *
+ * Presentación (opcional, en la primera fila del Código): Presentacion (una unidad del catálogo, ej. Caja),
+ * Contiene (cuántas unidades base trae, ej. 100) y Precio Presentacion. Crea o actualiza esa presentación.
  *
  * Regla "todo o nada": si una fila (de las no salteadas) falla, no se guarda nada.
  */
@@ -55,6 +63,11 @@ class GeneralProductsImport
         'category' => ['categoria'],
         'description' => ['descripcion'],
         'imported' => ['importado'],
+        'lot_number' => ['lote', 'numero de lote', 'nro de lote', 'n de lote'],
+        'expires_at' => ['vence', 'vencimiento', 'fecha de vencimiento'],
+        'pres_name' => ['presentacion'],
+        'pres_factor' => ['contiene', 'unidades por presentacion'],
+        'pres_price' => ['precio presentacion'],
     ];
 
     /** @var array<int, string> */
@@ -119,15 +132,63 @@ class GeneralProductsImport
             }
 
             $before = count($this->errors);
+            $first = null; // primera fila de este Código (si esta es una repetida: otro lote del mismo producto)
 
             if ($row['sku'] === '') {
                 $fail('el Código es obligatorio.');
             } elseif (mb_strlen($row['sku']) > 100) {
                 $fail('el Código supera los 100 caracteres.');
-            } elseif (isset($seenSkus[Str::lower($row['sku'])])) {
-                $fail('el Código "'.$row['sku'].'" está repetido (ya aparece en la fila '.$seenSkus[Str::lower($row['sku'])].').');
             } else {
-                $seenSkus[Str::lower($row['sku'])] = $line;
+                $first = $seenSkus[Str::lower($row['sku'])] ?? null;
+            }
+
+            $quantity = $row['quantity'] === '' ? '0' : $this->number($row['quantity']);
+            if ($quantity === null || Bc::lt($quantity, 0)) {
+                $fail('la Cantidad debe ser un número mayor o igual a 0.');
+            }
+
+            $purchasePrice = $row['purchase_price'] === '' ? null : $this->number($row['purchase_price']);
+            if ($quantity !== null && Bc::gt($quantity, 0) && ($purchasePrice === null || Bc::lt($purchasePrice, 0))) {
+                $fail('si trae Cantidad, el Precio Compra U es obligatorio y debe ser un número mayor o igual a 0.');
+            }
+
+            // Lote y vencimiento: solo tienen sentido si la fila carga stock (crean el lote de esa Cantidad).
+            $expiresAt = null;
+            if (mb_strlen($row['lot_number']) > 50) {
+                $fail('el Lote supera los 50 caracteres.');
+            }
+            if ($row['expires_at'] !== '') {
+                $expiresAt = ExcelDate::toDate($row['expires_at']);
+
+                if ($expiresAt === null) {
+                    $fail('la fecha de Vence "'.$row['expires_at'].'" no es válida (usa dd/mm/aaaa).');
+                }
+            }
+            if (($row['lot_number'] !== '' || $row['expires_at'] !== '') && $quantity !== null && ! Bc::gt($quantity, 0)) {
+                $fail('Lote y Vence son del stock que carga la fila: indica también la Cantidad.');
+            }
+
+            if ($first !== null) {
+                // Fila repetida = otro lote del mismo producto: los datos del producto vienen de la primera fila.
+                if (! $quantity || ! Bc::gt($quantity, 0)) {
+                    $fail('el Código "'.$row['sku'].'" ya aparece en la fila '.$first['line'].'. Una fila repetida es otro lote del mismo producto: necesita Cantidad.');
+                }
+                if ($row['name'] !== '' && Str::lower($row['name']) !== Str::lower($first['name'])) {
+                    $fail('el Código "'.$row['sku'].'" ya aparece en la fila '.$first['line'].' con otro Item ("'.$first['name'].'"). Deja el Item vacío o igual en las filas de otros lotes.');
+                }
+                $repeatedPrice = $row['sale_price'] === '' ? null : $this->number($row['sale_price']);
+                if ($row['sale_price'] !== '' && ($repeatedPrice === null || ! Bc::eq($repeatedPrice, $first['sale_price']))) {
+                    $fail('el Código "'.$row['sku'].'" ya aparece en la fila '.$first['line'].' con otro Precio Venta U. Déjalo vacío o igual en las filas de otros lotes.');
+                }
+                if ($row['pres_name'] !== '' || $row['pres_factor'] !== '' || $row['pres_price'] !== '') {
+                    $fail('la Presentación de "'.$row['sku'].'" va solo en su primera fila (la '.$first['line'].').');
+                }
+
+                if (count($this->errors) === $before) {
+                    $prepared[] = [...$row, 'extra_lot' => true, 'quantity' => $quantity, 'purchase_price' => $purchasePrice, 'expires_at' => $expiresAt];
+                }
+
+                continue;
             }
 
             if ($row['name'] === '') {
@@ -141,24 +202,36 @@ class GeneralProductsImport
                 $fail('el Precio Venta U es obligatorio y debe ser un número mayor o igual a 0.');
             }
 
-            $quantity = $row['quantity'] === '' ? '0' : $this->number($row['quantity']);
-            if ($quantity === null || Bc::lt($quantity, 0)) {
-                $fail('la Cantidad debe ser un número mayor o igual a 0.');
-            }
-
-            $purchasePrice = $row['purchase_price'] === '' ? null : $this->number($row['purchase_price']);
-            if ($quantity !== null && Bc::gt($quantity, 0) && ($purchasePrice === null || Bc::lt($purchasePrice, 0))) {
-                $fail('si trae Cantidad, el Precio Compra U es obligatorio y debe ser un número mayor o igual a 0.');
-            }
-
             $unit = null;
             if ($row['unit_name'] === '') {
                 $fail('la Unidad es obligatoria.');
             } else {
-                $unit = $units->first(fn ($u) => Str::lower(Str::ascii($u->name)) === Str::lower(Str::ascii($row['unit_name'])));
+                $unit = $this->catalogUnit($units, $row['unit_name']);
 
                 if (! $unit) {
                     $fail('la Unidad "'.$row['unit_name'].'" no existe (usa una del catálogo de unidades de medida).');
+                }
+            }
+
+            // Presentación opcional (ej. Caja que trae 100): los tres datos juntos o ninguno.
+            $presentation = null;
+            if ($row['pres_name'] !== '' || $row['pres_factor'] !== '' || $row['pres_price'] !== '') {
+                $presUnit = $row['pres_name'] === '' ? null : $this->catalogUnit($units, $row['pres_name']);
+                $presFactor = $this->number($row['pres_factor']);
+                $presPrice = $this->number($row['pres_price']);
+
+                if ($row['pres_name'] === '' || $row['pres_factor'] === '' || $row['pres_price'] === '') {
+                    $fail('para la Presentación completa los tres datos: Presentacion, Contiene y Precio Presentacion.');
+                } elseif (! $presUnit) {
+                    $fail('la Presentacion "'.$row['pres_name'].'" no existe (usa una del catálogo de unidades de medida, ej. Caja).');
+                } elseif ($unit && $presUnit->id === $unit->id) {
+                    $fail('la Presentacion no puede ser la misma Unidad base ("'.$unit->name.'").');
+                } elseif ($presFactor === null || ! Bc::isInteger($presFactor) || Bc::lt($presFactor, 2)) {
+                    $fail('Contiene debe ser un número entero mayor a 1 (cuántas unidades base trae la presentación).');
+                } elseif ($presPrice === null || Bc::lt($presPrice, 0)) {
+                    $fail('el Precio Presentacion debe ser un número mayor o igual a 0.');
+                } else {
+                    $presentation = ['unit' => $presUnit, 'factor' => Bc::int($presFactor), 'price' => Bc::round($presPrice, 2)];
                 }
             }
 
@@ -178,8 +251,13 @@ class GeneralProductsImport
                 $fail('la Categoria supera los 255 caracteres.');
             }
 
+            if ($row['sku'] !== '' && mb_strlen($row['sku']) <= 100) {
+                $seenSkus[Str::lower($row['sku'])] = ['line' => $line, 'name' => $row['name'], 'sale_price' => $salePrice ?? '0'];
+            }
+
             if (count($this->errors) === $before) {
-                $prepared[] = [...$row, 'sale_price' => $salePrice, 'quantity' => $quantity, 'purchase_price' => $purchasePrice, 'unit' => $unit];
+                $prepared[] = [...$row, 'extra_lot' => false, 'sale_price' => $salePrice, 'quantity' => $quantity, 'purchase_price' => $purchasePrice,
+                    'unit' => $unit, 'expires_at' => $expiresAt, 'presentation' => $presentation];
             }
         }
 
@@ -332,6 +410,11 @@ class GeneralProductsImport
                 'category' => $get('category'),
                 'description' => $get('description'),
                 'imported' => $get('imported'),
+                'lot_number' => $get('lot_number'),
+                'expires_at' => $get('expires_at'),
+                'pres_name' => $get('pres_name'),
+                'pres_factor' => $get('pres_factor'),
+                'pres_price' => $get('pres_price'),
                 'photo' => $photosByRow[$r] ?? null,
             ];
         }
@@ -347,21 +430,39 @@ class GeneralProductsImport
      */
     private function checkBarcodeConflicts(array $prepared): void
     {
-        $skus = collect($prepared)->pluck('sku')->unique()->values();
+        // Código de barras de cada fila que define un producto: su SKU y, si trae presentación, el de esa presentación.
+        $barcodes = [];
+        foreach ($prepared as $row) {
+            if ($row['extra_lot']) {
+                continue;
+            }
 
-        if ($skus->isEmpty()) {
+            $barcodes[] = [$row, $row['sku']];
+
+            if ($row['presentation']) {
+                $barcodes[] = [$row, $this->presentationBarcode($row['sku'], $row['presentation']['unit']->name)];
+            }
+        }
+
+        if ($barcodes === []) {
             return;
         }
 
-        $owners = \App\Models\ProductUnit::whereIn('barcode', $skus)->with('product:id,sku')->get()->keyBy('barcode');
+        $owners = \App\Models\ProductUnit::whereIn('barcode', array_column($barcodes, 1))->with('product:id,sku')->get()->keyBy('barcode');
 
-        foreach ($prepared as $row) {
-            $unit = $owners[$row['sku']] ?? null;
+        foreach ($barcodes as [$row, $barcode]) {
+            $unit = $owners[$barcode] ?? null;
 
             if ($unit && Str::lower($unit->product->sku) !== Str::lower($row['sku'])) {
-                $this->errors[] = "Fila {$row['line']}: el código \"{$row['sku']}\" ya lo usa como código de barras el producto \"{$unit->product->sku}\".";
+                $this->errors[] = "Fila {$row['line']}: el código \"{$barcode}\" ya lo usa como código de barras el producto \"{$unit->product->sku}\".";
             }
         }
+    }
+
+    /** Código de barras de una presentación creada por la importación: SKU + nombre (MED-0001-CAJA). */
+    private function presentationBarcode(string $sku, string $unitName): string
+    {
+        return $sku.'-'.Str::upper(Str::slug($unitName, ''));
     }
 
     /**
@@ -388,8 +489,15 @@ class GeneralProductsImport
             ->keyBy(fn ($product) => Str::lower($product->sku));
 
         $stockItems = [];
+        $baseUnits = []; // SKU (minúsculas) => unidad base, para los lotes de las filas repetidas
 
         foreach ($prepared as $row) {
+            if ($row['extra_lot']) {
+                $stockItems[] = $this->stockItem($baseUnits[Str::lower($row['sku'])], $row);
+
+                continue;
+            }
+
             $product = $existing[Str::lower($row['sku'])] ?? null;
             $categoryId = $row['category'] !== '' ? $resolveCategory($row['category']) : null;
 
@@ -418,17 +526,18 @@ class GeneralProductsImport
             }
 
             $unit = $this->syncBaseUnit($product, $row);
+            $baseUnits[Str::lower($row['sku'])] = $unit;
+
+            if ($row['presentation']) {
+                $this->syncPresentation($product, $row);
+            }
 
             if ($row['photo']) {
                 $this->savePhoto($product, $row['photo']);
             }
 
             if (Bc::gt($row['quantity'], 0)) {
-                $stockItems[] = [
-                    'product_unit_id' => $unit->id,
-                    'quantity' => $row['quantity'],
-                    'unit_cost' => $row['purchase_price'] ?? 0,
-                ];
+                $stockItems[] = $this->stockItem($unit, $row);
             }
         }
 
@@ -443,6 +552,47 @@ class GeneralProductsImport
             );
             $this->stockLoaded = count($stockItems);
         }
+    }
+
+    /**
+     * Lote de stock de una fila: Cantidad en la unidad base, a su Precio Compra U (2 decimales) y con su Lote y Vence.
+     *
+     * @return array{product_unit_id: int, quantity: string, unit_cost: string, lot_number: ?string, expires_at: ?string}
+     */
+    private function stockItem(\App\Models\ProductUnit $unit, array $row): array
+    {
+        return [
+            'product_unit_id' => $unit->id,
+            'quantity' => $row['quantity'],
+            'unit_cost' => Bc::round($row['purchase_price'] ?? 0, 2),
+            'lot_number' => $row['lot_number'] !== '' ? $row['lot_number'] : null,
+            'expires_at' => $row['expires_at'],
+        ];
+    }
+
+    /**
+     * Presentación de la fila (ej. Caja que trae 100): si el producto ya tiene una con ese nombre se actualizan lo que
+     * contiene y su precio; si no, se crea con código de barras SKU-NOMBRE.
+     */
+    private function syncPresentation(Product $product, array $row): void
+    {
+        ['unit' => $unit, 'factor' => $factor, 'price' => $price] = $row['presentation'];
+        $existing = $product->units->first(fn ($u) => ! $u->is_base && Str::lower(Str::ascii($u->name)) === Str::lower(Str::ascii($unit->name)));
+
+        if ($existing) {
+            $existing->update(['factor' => $factor, 'price' => $price]);
+
+            return;
+        }
+
+        $product->units()->create([
+            'unit_id' => $unit->id,
+            'name' => $unit->name,
+            'factor' => $factor,
+            'price' => $price,
+            'is_base' => false,
+            'barcode' => $this->presentationBarcode($row['sku'], $unit->name),
+        ]);
     }
 
     /**
@@ -521,6 +671,12 @@ class GeneralProductsImport
         if ($bytes < 512 * 1024 ** 2) {
             @ini_set('memory_limit', '512M');
         }
+    }
+
+    /** Unidad del catálogo por nombre, sin importar mayúsculas ni tildes. */
+    private function catalogUnit(\Illuminate\Support\Collection $units, string $name): ?Unit
+    {
+        return $units->first(fn ($u) => Str::lower(Str::ascii($u->name)) === Str::lower(Str::ascii($name)));
     }
 
     private function isImported(string $value): bool

@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Support\Bc;
+use App\Support\ExcelDate;
 use App\Models\Product;
 use App\Models\ProductUnit;
 use App\Models\ProductWarehouse;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Carga de inventario desde Excel hacia UN almacén, con la regla "todo o nada": primero se valida cada fila y,
@@ -20,11 +22,20 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
  * movimientos (uno de entrada y uno de salida), dentro de una única transacción y por el mismo camino que los
  * movimientos manuales: cada entrada crea un lote FIFO con su costo y cada salida consume lotes.
  *
- * Columnas: sku (o código de barras), tipo (entrada/salida), cantidad (entera), unidad (presentación; vacío = base)
- * y costo_unitario (obligatorio en entradas: costo de UNA unidad de la presentación indicada).
+ * Columnas: sku (o código de barras), tipo (entrada/salida), cantidad (entera), unidad (presentación; vacío = base),
+ * costo_unitario (obligatorio en entradas: costo de UNA unidad de la presentación indicada) y, solo en entradas,
+ * lote y vence (opcionales: número de lote del fabricante y fecha de vencimiento del lote que se crea).
  */
-class StockMovementsImport implements ToCollection, WithHeadingRow
+class StockMovementsImport implements ToCollection, WithHeadingRow, WithMultipleSheets
 {
+    /**
+     * Solo la primera hoja ("Inventario"): la plantilla trae también la hoja "Instrucciones", que no son datos.
+     */
+    public function sheets(): array
+    {
+        return [0 => $this];
+    }
+
     public const MAX_ROWS = 5000;
 
     /** @var array<int, string> */
@@ -74,6 +85,9 @@ class StockMovementsImport implements ToCollection, WithHeadingRow
             $unitName = $this->text($row['unidad'] ?? null);
             $rawCost = $this->text($row['costo_unitario'] ?? null);
             $cost = $rawCost === '' ? null : $this->number($rawCost);
+            $lotNumber = $this->text($row['lote'] ?? null);
+            $rawExpires = $this->text($row['vence'] ?? null);
+            $expiresAt = $rawExpires === '' ? null : ExcelDate::toDate($rawExpires);
             $before = count($this->errors);
 
             // Producto y presentación
@@ -123,6 +137,18 @@ class StockMovementsImport implements ToCollection, WithHeadingRow
                 $fail('en una entrada, el costo_unitario es obligatorio y debe ser un número mayor o igual a 0.');
             }
 
+            if ($type === 'salida' && ($lotNumber !== '' || $rawExpires !== '')) {
+                $fail('lote y vence son solo para entradas: una salida descuenta de los lotes que ya existen.');
+            }
+
+            if (mb_strlen($lotNumber) > 50) {
+                $fail('el lote supera los 50 caracteres.');
+            }
+
+            if ($rawExpires !== '' && $expiresAt === null) {
+                $fail("la fecha de vence \"{$rawExpires}\" no es válida (usa dd/mm/aaaa).");
+            }
+
             if (count($this->errors) > $before || ! $product || ! $unit) {
                 continue;
             }
@@ -130,8 +156,10 @@ class StockMovementsImport implements ToCollection, WithHeadingRow
             $item = ['product_unit_id' => $unit->id, 'quantity' => (int) $quantity, 'unit_cost' => null, 'line' => $line, 'product' => $product, 'base' => Bc::mul((int) $quantity, $unit->factor)];
 
             if ($type === 'entrada') {
-                // El lote guarda el costo por unidad BASE: costo de la presentación ÷ lo que contiene.
-                $item['unit_cost'] = Bc::round(Bc::div($cost, Bc::max($unit->factor, '0.0001')), 4);
+                // El lote guarda el costo por unidad BASE (2 decimales): costo de la presentación ÷ lo que contiene.
+                $item['unit_cost'] = Bc::round(Bc::div($cost, Bc::max($unit->factor, '0.0001')), 2);
+                $item['lot_number'] = $lotNumber !== '' ? $lotNumber : null;
+                $item['expires_at'] = $expiresAt;
                 $entries[] = $item;
                 $entryBase[$product->id] = Bc::add($entryBase[$product->id] ?? 0, $item['base']);
             } else {
@@ -167,7 +195,8 @@ class StockMovementsImport implements ToCollection, WithHeadingRow
             $service = app(StockMovementService::class);
             $note = $this->note ?: 'Carga de inventario desde Excel';
             $clean = fn (array $items) => array_map(fn ($i) => array_filter(
-                ['product_unit_id' => $i['product_unit_id'], 'quantity' => $i['quantity'], 'unit_cost' => $i['unit_cost']],
+                ['product_unit_id' => $i['product_unit_id'], 'quantity' => $i['quantity'], 'unit_cost' => $i['unit_cost'],
+                    'lot_number' => $i['lot_number'] ?? null, 'expires_at' => $i['expires_at'] ?? null],
                 fn ($v) => $v !== null
             ), $items);
 

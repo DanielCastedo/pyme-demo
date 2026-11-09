@@ -20,7 +20,7 @@ class GeneralProductsTemplateExport implements WithMultipleSheets
     public function sheets(): array
     {
         return [
-            new GeneralProductsTemplateSheet($this->units->first(), $this->categories->first()),
+            new GeneralProductsTemplateSheet($this->units, $this->categories),
             new GeneralProductsInstructionsSheet(),
             new GeneralProductsUnitsSheet($this->units),
             new GeneralProductsCategoriesSheet($this->categories),
