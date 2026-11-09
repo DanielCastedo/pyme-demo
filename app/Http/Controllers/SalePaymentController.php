@@ -7,7 +7,6 @@ use App\Http\Requests\StoreOrderPaymentRequest;
 use App\Models\Cashbox;
 use App\Models\Order;
 use App\Models\OrderPayment;
-use App\Models\PaymentMethod;
 use App\Services\OrderPaymentService;
 
 /**
@@ -24,10 +23,10 @@ class SalePaymentController extends Controller
         $data = $request->validated();
 
         try {
-            $service->collect(
+            // Un método por todo el abono, o pago mixto (varios métodos que suman el monto del abono).
+            $service->collectParts(
                 $sale,
-                Bc::num($data['amount']),
-                PaymentMethod::findOrFail($data['payment_id']),
+                $service->parts($data, Bc::num($data['amount'])),
                 Cashbox::findOrFail($data['cashbox_id']),
                 $request->user()
             );

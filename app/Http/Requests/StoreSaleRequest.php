@@ -7,6 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class StoreSaleRequest extends FormRequest
 {
     use \App\Http\Requests\Concerns\ValidatesItemWarehouses;
+    use \App\Http\Requests\Concerns\ValidatesPaymentSplit;
 
     public function authorize(): bool
     {
@@ -22,7 +23,7 @@ class StoreSaleRequest extends FormRequest
             'due_date' => 'required_if:payment_type,credit|nullable|date|after:today',
             'initial_payment' => 'nullable|numeric|min:0',
             'cashbox_id' => 'required_unless:payment_type,credit|nullable|exists:cashboxes,id',
-            'payment_id' => 'required_unless:payment_type,credit|nullable|exists:payments,id',
+            ...$this->paymentSplitRules($this->input('payment_type') !== 'credit'),
             'note' => 'nullable|string|max:1000',
             'receipt_photo' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:10240',
             'items' => 'required|array|min:1',
@@ -40,7 +41,7 @@ class StoreSaleRequest extends FormRequest
         return [
             'warehouse_id.required' => 'Selecciona el almacén de donde sale la mercadería.',
             'cashbox_id.required_unless' => 'Selecciona la caja donde se cobra.',
-            'payment_id.required_unless' => 'Selecciona el método de pago.',
+            ...$this->paymentSplitMessages(),
             'due_date.required_if' => 'La fecha de vencimiento es obligatoria en una venta a crédito.',
             'due_date.after' => 'La fecha de vencimiento debe ser posterior a hoy.',
             'initial_payment.min' => 'El anticipo no puede ser negativo.',

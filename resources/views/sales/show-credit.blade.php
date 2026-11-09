@@ -103,8 +103,8 @@
             <form action="{{ route('sales.payments.store', $order) }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 @csrf
                 <x-ui.form-field type="number" name="amount" label="Monto a cobrar" required :value="old('amount', $order->balance)" />
-                <x-ui.form-field type="select" name="payment_id" label="Método de pago" required
-                    :options="$paymentMethods->pluck('name', 'id')->toArray()" />
+                {{-- Un método, o pago mixto: los métodos suman el monto a cobrar --}}
+                <x-ui.payment-split :methods="$paymentMethods" id="abono-payment-id" target-input="#amount" />
                 <x-ui.form-field type="select" name="cashbox_id" label="Caja" required
                     :options="$cashboxes->pluck('name', 'id')->toArray()" />
                 <x-ui.button type="submit" variant="primary" :fullWidth="true">Registrar cobro</x-ui.button>

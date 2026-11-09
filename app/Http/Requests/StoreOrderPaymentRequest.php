@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesPaymentSplit;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreOrderPaymentRequest extends FormRequest
 {
+    use ValidatesPaymentSplit;
+
     public function authorize(): bool
     {
         return true;
@@ -15,8 +18,8 @@ class StoreOrderPaymentRequest extends FormRequest
     {
         return [
             'amount' => 'required|numeric|min:0.01',
-            'payment_id' => 'required|exists:payments,id',
             'cashbox_id' => 'required|exists:cashboxes,id',
+            ...$this->paymentSplitRules(true),
         ];
     }
 
@@ -25,8 +28,8 @@ class StoreOrderPaymentRequest extends FormRequest
         return [
             'amount.required' => 'El monto del cobro es obligatorio.',
             'amount.min' => 'El monto del cobro debe ser mayor a 0.',
-            'payment_id.required' => 'Selecciona el método de pago.',
             'cashbox_id.required' => 'Selecciona la caja donde se cobra.',
+            ...$this->paymentSplitMessages(),
         ];
     }
 }

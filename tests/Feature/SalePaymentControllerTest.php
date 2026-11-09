@@ -123,11 +123,13 @@ describe('cobro de ventas a crédito (store)', function () {
 
         $payload = validPaymentPayload($sale);
 
-        $mockService = mock(OrderPaymentService::class);
-        $mockService->shouldReceive('collect')->once()->with(
+        // parts() arma el reparto real (un solo método por todo el abono); solo se simula el registro del cobro.
+        $mockService = Mockery::mock(OrderPaymentService::class, [app(\App\Services\TransactionService::class)])->makePartial();
+        $mockService->shouldReceive('collectParts')->once()->with(
             Mockery::on(fn ($arg) => $arg->id === $sale->id),
-            50.0,
-            Mockery::on(fn ($arg) => $arg->id === (int) $payload['payment_id']),
+            Mockery::on(fn ($parts) => count($parts) === 1
+                && $parts[0]['payment']->id === (int) $payload['payment_id']
+                && (float) $parts[0]['amount'] === 50.0),
             Mockery::on(fn ($arg) => $arg->id === (int) $payload['cashbox_id']),
             Mockery::on(fn ($arg) => $arg->id === $user->id)
         );

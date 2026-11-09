@@ -1,6 +1,9 @@
 {{-- Detalle de una venta AL CONTADO: se cobró completa en el momento. Recibe: $order --}}
 @php
-    $payment = $order->payments->where('canceled', false)->first() ?? $order->payments->first();
+    // Pago mixto: la venta se cobró con varios métodos (un cobro por método).
+    $active = $order->payments->where('canceled', false);
+    $shown = $active->isNotEmpty() ? $active : $order->payments->take(1);
+    $payment = $shown->first();
 
     $items = [
         ['label' => 'Venta N°', 'value' => '#'.$order->id],
@@ -14,7 +17,11 @@
         ['label' => 'Forma de pago', 'value' => 'Contado'],
     ];
 
-    if ($payment) {
+    if ($shown->count() > 1) {
+        $items[] = ['label' => 'Método de pago', 'value' => 'Pago mixto: '.$shown->map(fn ($p) => ($p->transaction->paymentMethod->name ?? '—').' '.number_format((float) $p->amount, 2))->implode(' · ')];
+        $items[] = ['label' => 'Caja', 'value' => $payment->transaction->cashbox->name];
+        $items[] = ['label' => 'Transacciones', 'value' => $shown->map(fn ($p) => $p->transaction->number)->implode(', '), 'mono' => true];
+    } elseif ($payment) {
         $items[] = ['label' => 'Método de pago', 'value' => $payment->transaction->paymentMethod->name ?? '—'];
         $items[] = ['label' => 'Caja', 'value' => $payment->transaction->cashbox->name];
         $items[] = ['label' => 'Transacción', 'value' => $payment->transaction->number.($payment->canceled ? ' (anulada)' : ''), 'mono' => true];
@@ -46,7 +53,7 @@
 
     @include('sales.partials.receipt-card')
 
-    @include('sales.partials.payments-table', ['title' => 'Cobro', 'emptyText' => 'Sin cobro registrado.', 'allowCancel' => false])
+    @include('sales.partials.payments-table', ['title' => $shown->count() > 1 ? 'Cobros (pago mixto)' : 'Cobro', 'emptyText' => 'Sin cobro registrado.', 'allowCancel' => false])
 
     @include('sales.partials.actions', ['cancelMessage' => '¿Anular esta venta? El stock vuelve a sus lotes y el cobro se revierte en la caja.'])
 </x-ui.show-page>

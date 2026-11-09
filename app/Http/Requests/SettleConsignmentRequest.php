@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class SettleConsignmentRequest extends FormRequest
 {
+    use \App\Http\Requests\Concerns\ValidatesPaymentSplit;
+
     /**
      * Se autoriza antes de validar: quien no puede liquidar recibe 403, no los errores del formulario.
      */
@@ -26,8 +28,9 @@ class SettleConsignmentRequest extends FormRequest
             'payment_type' => 'nullable|in:cash,credit',
             'due_date' => 'required_if:payment_type,credit|nullable|date|after:today',
             'initial_payment' => 'nullable|numeric|min:0',
-            'payment_id' => 'nullable|exists:payments,id',
             'cashbox_id' => 'nullable|exists:cashboxes,id',
+            // El método solo hace falta si se cobra algo; si falta, lo informa la venta al liquidar.
+            ...$this->paymentSplitRules(false),
         ];
     }
 
@@ -43,6 +46,7 @@ class SettleConsignmentRequest extends FormRequest
             'lines.*.returned.integer' => 'Lo devuelto debe ser un número entero.',
             'due_date.required_if' => 'La fecha de vencimiento es obligatoria si lo vendido queda a crédito.',
             'due_date.after' => 'La fecha de vencimiento debe ser posterior a hoy.',
+            ...$this->paymentSplitMessages(),
         ];
     }
 }

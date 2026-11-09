@@ -208,8 +208,9 @@
                             </div>
                         </div>
                     @endif
-                    <x-ui.form-field type="select" name="payment_id" label="Método de pago (del cobro o anticipo)"
-                        :options="$paymentMethods->pluck('name', 'id')->toArray()" />
+                    {{-- Un método, o pago mixto: los métodos suman lo vendido (o el anticipo, si queda a crédito) --}}
+                    <x-ui.payment-split :methods="$paymentMethods" id="settle-payment-id" label="Método de pago (del cobro o anticipo)" />
+
                     <x-ui.form-field type="select" name="cashbox_id" label="Caja"
                         :options="$cashboxes->pluck('name', 'id')->toArray()" />
                 </div>
@@ -246,6 +247,16 @@
                     document.getElementById('payment-terms').classList.toggle('hidden', !anySold);
                     document.getElementById('overflow-warning').classList.toggle('hidden', !overflow);
                     document.getElementById('settle-submit').disabled = overflow || !anyLine;
+                    syncTarget(total);
+                }
+
+                // Lo que se cobra ahora (y deben sumar los métodos del pago mixto): lo vendido, o el anticipo a crédito.
+                // Lo vendido aquí es cantidad × precio; si la consignación tiene descuentos, el servidor avisa la diferencia.
+                function syncTarget(total) {
+                    const type = document.getElementById('settle-type');
+                    const initial = document.querySelector('#settle-credit [name=initial_payment]');
+                    window.PaymentSplit.get(document.querySelector('#settle-form .payment-split'))
+                        .setTarget(type?.value === 'credit' ? (Number(initial.value) || 0) : total);
                 }
 
                 const fill = (soldFn, retFn) => {
@@ -266,7 +277,9 @@
                     const on = type.value === 'credit';
                     credit.classList.toggle('hidden', !on);
                     credit.querySelectorAll('input').forEach((i) => { i.disabled = !on; });
+                    recalc();
                 });
+                credit?.querySelector('[name=initial_payment]')?.addEventListener('input', recalc);
 
                 recalc();
             })();

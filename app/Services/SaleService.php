@@ -30,7 +30,7 @@ class SaleService
     ) {}
 
     /**
-     * @param  array{customer_id?: int|null, warehouse_id: int, note?: string|null, payment_type?: string, due_date?: string|null, initial_payment?: float|string|null, payment_id?: int|null, cashbox_id?: int|null}  $data
+     * @param  array{customer_id?: int|null, warehouse_id: int, note?: string|null, payment_type?: string, due_date?: string|null, initial_payment?: float|string|null, payment_id?: int|null, payments?: array<int, array{payment_id: int, amount: float|string}>|null, cashbox_id?: int|null}  $data
      * @param  array<int, array{product_unit_id: int, warehouse_id?: int|string|null, quantity: float|string, unit_price?: float|string|null, discount_type?: string|null, discount_value?: float|string|null}>  $items
      *         Cada línea puede traer su propio warehouse_id (de qué almacén sale ESA línea); si no trae,
      *         se asume el warehouse_id de la venta.
@@ -96,7 +96,7 @@ class SaleService
      * Confirma un pedido en espera: baja el stock (FIFO) y cobra (contado) o deja el saldo a crédito, con los
      * precios y descuentos ya acordados en el pedido. El pedido pasa a ser una venta.
      *
-     * @param  array{payment_type?: string, due_date?: string|null, initial_payment?: float|string|null, payment_id?: int|null, cashbox_id?: int|null}  $data
+     * @param  array{payment_type?: string, due_date?: string|null, initial_payment?: float|string|null, payment_id?: int|null, payments?: array<int, array{payment_id: int, amount: float|string}>|null, cashbox_id?: int|null}  $data
      *
      * @throws \RuntimeException si el pedido no está en espera, no hay stock suficiente ahora o los términos no son válidos.
      */
@@ -135,7 +135,7 @@ class SaleService
      * se entregó, así que aquí NO se mueve stock: solo se crea la orden (a los precios acordados, con el costo
      * FIFO que tuvo al despachar) y se cobra o se deja a crédito.
      *
-     * @param  array{note?: string|null, payment_type?: string, due_date?: string|null, initial_payment?: float|string|null, payment_id?: int|null, cashbox_id?: int|null}  $data
+     * @param  array{note?: string|null, payment_type?: string, due_date?: string|null, initial_payment?: float|string|null, payment_id?: int|null, payments?: array<int, array{payment_id: int, amount: float|string}>|null, cashbox_id?: int|null}  $data
      * @param  array<int, array{unit: \App\Models\ProductUnit, quantity: float, price: float, discount?: float, unit_cost: float}>  $lines
      *
      * @throws \RuntimeException
@@ -179,8 +179,8 @@ class SaleService
                 ]);
             }
 
-            if (Bc::gt($terms['collect_now'], 0)) {
-                $this->payments->collect($order, $terms['collect_now'], $terms['payment'], $terms['cashbox'], $user);
+            if ($terms['parts'] !== []) {
+                $this->payments->collectParts($order, $terms['parts'], $terms['cashbox'], $user);
             }
 
             return $order->refresh();
@@ -219,14 +219,13 @@ class SaleService
      * Valida y normaliza cómo se paga la venta. Devuelve el tipo, vencimiento, anticipo y los medios
      * (método de pago y caja) que se usarán para cobrar lo que se cobre ahora.
      *
-     * @return array{type: string, due_date: ?string, collect_now: float, payment: ?PaymentMethod, cashbox: ?Cashbox}
+     * @return array{type: string, due_date: ?string, collect_now: string, parts: array<int, array{payment: PaymentMethod, amount: string}>, cashbox: ?Cashbox}
      *
      * @throws \RuntimeException
      */
     private function resolveTerms(array $data, int|float|string $total, ?Customer $customer, Warehouse $warehouse, User $user): array
     {
         $type = ($data['payment_type'] ?? Order::PAYMENT_CASH) === Order::PAYMENT_CREDIT ? Order::PAYMENT_CREDIT : Order::PAYMENT_CASH;
-        $payment = ! empty($data['payment_id']) ? PaymentMethod::find($data['payment_id']) : null;
         $cashbox = ! empty($data['cashbox_id']) ? Cashbox::find($data['cashbox_id']) : null;
         $dueDate = null;
 
@@ -268,23 +267,28 @@ class SaleService
             }
         }
 
+        $parts = [];
+
         if (Bc::gt($collectNow, 0)) {
-            if (! $payment || ! $cashbox) {
+            if (! $cashbox) {
                 throw new \RuntimeException('Selecciona el método de pago y la caja donde se cobra.');
             }
 
             if ((int) $cashbox->branche_id !== (int) $warehouse->branche_id) {
                 throw new \RuntimeException('La caja y el almacén elegidos no son de la misma sucursal.');
             }
+
+            // Un método por todo, o pago mixto: varios métodos que suman exactamente lo que se cobra ahora.
+            $parts = $this->payments->parts($data, $collectNow);
         }
 
-        return ['type' => $type, 'due_date' => $dueDate, 'collect_now' => $collectNow, 'payment' => $payment, 'cashbox' => $cashbox];
+        return ['type' => $type, 'due_date' => $dueDate, 'collect_now' => $collectNow, 'parts' => $parts, 'cashbox' => $cashbox];
     }
 
     /**
      * Pasos comunes de toda venta ya con su orden guardada: salida de stock FIFO y el cobro de lo que se paga ahora.
      *
-     * @param  array{collect_now: float, payment: ?PaymentMethod, cashbox: ?Cashbox}  $terms
+     * @param  array{parts: array<int, array{payment: PaymentMethod, amount: string}>, cashbox: ?Cashbox}  $terms
      */
     private function settle(Order $order, array $terms, User $user, ?string $receiptPhoto = null): void
     {
@@ -306,8 +310,8 @@ class SaleService
             );
         }
 
-        if ($terms['collect_now'] > 0) {
-            $this->payments->collect($order, $terms['collect_now'], $terms['payment'], $terms['cashbox'], $user, $receiptPhoto);
+        if ($terms['parts'] !== []) {
+            $this->payments->collectParts($order, $terms['parts'], $terms['cashbox'], $user, $receiptPhoto);
         }
     }
 }

@@ -134,8 +134,9 @@
                     </div>
                 @endif
 
-                <x-ui.form-field type="select" name="payment_id" label="Método de pago (del cobro o anticipo)" required
-                    :options="$paymentMethods->pluck('name', 'id')->toArray()" />
+                {{-- Un método, o pago mixto: los métodos suman el total (o el anticipo, si es a crédito) --}}
+                <x-ui.payment-split :methods="$paymentMethods" id="confirm-payment-id" label="Método de pago (del cobro o anticipo)"
+                    :target="(float) $pedido->amount" />
                 <x-ui.form-field type="select" name="cashbox_id" label="Caja" required
                     :options="$cashboxes->pluck('name', 'id')->toArray()" />
                 <x-ui.button type="submit" variant="primary" :fullWidth="true">Confirmar venta</x-ui.button>
@@ -146,11 +147,20 @@
                     (function() {
                         const type = document.getElementById('confirm-type');
                         const box = document.getElementById('confirm-credit');
+                        const initial = box.querySelector('[name=initial_payment]');
+                        const total = {{ (float) $pedido->amount }};
+                        // A crédito, lo que se cobra ahora (y deben sumar los métodos del pago mixto) es el anticipo.
+                        const syncTarget = () => {
+                            const split = window.PaymentSplit.get(box.closest('form').querySelector('.payment-split'));
+                            split.setTarget(type.value === 'credit' ? (Number(initial.value) || 0) : total);
+                        };
                         type.addEventListener('change', () => {
                             const credit = type.value === 'credit';
                             box.classList.toggle('hidden', !credit);
                             box.querySelectorAll('input').forEach((i) => { i.disabled = !credit; });
+                            syncTarget();
                         });
+                        initial.addEventListener('input', syncTarget);
                     })();
                 </script>
             @endif

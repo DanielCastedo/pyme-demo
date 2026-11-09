@@ -191,13 +191,8 @@
                     @else
                     {{-- Cómo paga --}}
                     <div id="payment-block">
-                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Método de pago</label>
-                        <select name="payment_id" id="payment-id"
-                            class="w-full h-10 px-3 text-sm rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
-                            @foreach ($paymentMethods as $pm)
-                                <option value="{{ $pm->id }}" data-cash="{{ $pm->is_cash ? 1 : 0 }}" @selected(old('payment_id') == $pm->id)>{{ $pm->name }}</option>
-                            @endforeach
-                        </select>
+                        {{-- Un método, o pago mixto (ej. parte por QR y parte en efectivo) --}}
+                        <x-ui.payment-split :methods="$paymentMethods" id="payment-id" />
                     </div>
                     @endif
 
@@ -515,6 +510,9 @@
                 }
                 const body = $('lines-body'), empty = $('lines-empty');
                 const branchSel = $('branch-id'), whSel = $('warehouse-id'), cbSel = $('cashbox-id'), paySel = $('payment-id');
+                // Método de pago con pago mixto (ver x-ui.payment-split); solo existe al vender.
+                const splitEl = document.querySelector('#payment-block .payment-split');
+                const split = splitEl ? window.PaymentSplit.get(splitEl) : null;
                 const submitBtn = $('submit-btn'), totalEl = $('total'), warning = $('stock-warning');
 
                 const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -1161,6 +1159,16 @@
                         if (cr.msg) { valid = false; problems.push(cr.msg); }
                     }
 
+                    // Pago mixto: los métodos deben sumar lo que se cobra ahora (el total, o el anticipo a crédito).
+                    if (split) {
+                        const collectNow = saleType === 'credit' ? round2(Number($('initial-payment')?.value) || 0) : net;
+                        split.setTarget(collectNow);
+                        if (collectNow > 0 && !split.isValid()) {
+                            valid = false;
+                            problems.push(`Los métodos del pago mixto deben sumar ${money(collectNow)}`);
+                        }
+                    }
+
                     totalEl.textContent = money(net);
                     $('gross').textContent = money(gross);
                     $('discount-total').textContent = '− ' + money(discount);
@@ -1217,7 +1225,15 @@
                 }
 
                 // ── Efectivo recibido / vuelto ───────────────────────────
-                function isCash() { return paySel?.options[paySel.selectedIndex]?.dataset.cash === '1'; }
+                function isCash() {
+                    if (split?.isSplit()) return split.parts().some((p) => p.method.cash);
+                    return paySel?.options[paySel.selectedIndex]?.dataset.cash === '1';
+                }
+
+                // Lo que se paga en efectivo: todo, o en un pago mixto solo la parte en efectivo (para el vuelto).
+                function cashAmount(total) {
+                    return split?.isSplit() ? round2(split.parts().filter((p) => p.method.cash).reduce((s, p) => s + p.amount, 0)) : total;
+                }
 
                 function currentTotal() {
                     return round2(lines.reduce((s, l) => s + calc(l).net, 0));
@@ -1225,7 +1241,7 @@
 
                 function updateChange(total = null) {
                     $('cash-helper')?.classList.toggle('hidden', !isCash() || saleType === 'credit');
-                    const t = total ?? currentTotal();
+                    const t = cashAmount(total ?? currentTotal());
                     const received = parseFloat($('received')?.value);
                     const el = $('change');
                     if (!el) return; // solo existe en ventas
@@ -1239,6 +1255,7 @@
                 ['received', 'note-input'].forEach((id) => $(id)?.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); }));
 
                 paySel?.addEventListener('change', () => updateChange());
+                if (split) split.onChange = () => { if (ready) refresh(); };
                 $('received')?.addEventListener('input', () => updateChange());
 
                 // ── Cliente (opcional) ───────────────────────────────────
@@ -1358,6 +1375,7 @@
 
                 // ── Flujo de Cobro con QR y Comprobante ───────────────────
                 function isQr() {
+                    if (split?.isSplit()) return split.parts().some((p) => p.method.qr);
                     const text = (paySel?.options[paySel.selectedIndex]?.textContent || '').toLowerCase();
                     return text.includes('qr');
                 }
@@ -1380,9 +1398,10 @@
 
                 function openQrModal() {
                     if (!qrModal) return;
-                    const amountText = (mode === 'sale' && saleType === 'credit')
-                        ? (Number($('initial-payment')?.value) || 0)
-                        : currentTotal();
+                    // En un pago mixto, el QR muestra solo la parte que se paga por QR.
+                    const amountText = split?.isSplit()
+                        ? round2(split.parts().filter((p) => p.method.qr).reduce((s, p) => s + p.amount, 0))
+                        : ((mode === 'sale' && saleType === 'credit') ? (Number($('initial-payment')?.value) || 0) : currentTotal());
                     $('qr-modal-amount').textContent = 'Bs. ' + money(amountText);
                     qrError?.classList.add('hidden');
                     qrModal.classList.remove('hidden');
