@@ -7,6 +7,8 @@
             'id' => (int) ($i['product_unit_id'] ?? 0),
             'quantity' => $i['quantity'] ?? 1,
             'cost' => $i['unit_cost'] ?? 0,
+            'lot_number' => $i['lot_number'] ?? null,
+            'expires_at' => $i['expires_at'] ?? null,
             'distribution' => collect($i['distribution'] ?? [])->map(fn ($d) => ['warehouse_id' => (int) ($d['warehouse_id'] ?? 0), 'quantity' => $d['quantity'] ?? 1])->values(),
         ])->values();
     @endphp
@@ -519,6 +521,8 @@
                     l.hid.name = `items[${i}][product_unit_id]`;
                     l.qty.name = `items[${i}][quantity]`;
                     l.cost.name = `items[${i}][unit_cost]`;
+                    l.lot.name = `items[${i}][lot_number]`;
+                    l.exp.name = `items[${i}][expires_at]`;
                     l.dist.rows.forEach((r, j) => {
                         r.select.name = `items[${i}][distribution][${j}][warehouse_id]`;
                         r.qty.name = `items[${i}][distribution][${j}][quantity]`;
@@ -628,7 +632,7 @@
                 return ok;
             }
 
-            function addLine(u, qty = 1, cost = null, distribution = []) {
+            function addLine(u, qty = 1, cost = null, distribution = [], lot = {}) {
                 const existing = lines.find((l) => l.unit.id === u.id);
                 if (existing) { existing.qty.value = (parseInt(existing.qty.value, 10) || 0) + 1; refresh(); return; }
 
@@ -648,13 +652,24 @@
                 tr.children[0].children[0].textContent = u.name + ' — ' + u.unit;
                 tr.children[0].children[0].title = u.name + ' — ' + u.unit;
                 tr.children[0].children[1].textContent = u.sku + (u.factor !== 1 ? ` · 1 ${u.unit} = ${u.factor} unid. base` : '');
+                // Lote del fabricante y vencimiento (opcionales): quedan guardados en el lote del inventario.
+                const lotBox = document.createElement('div');
+                lotBox.className = 'mt-1.5 flex flex-wrap items-center gap-1.5';
+                lotBox.innerHTML = `
+                    <input type="text" maxlength="50" placeholder="N° de lote" aria-label="Número de lote" class="lot w-28 h-8 px-2 text-xs rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400">
+                    <label class="inline-flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">Vence
+                        <input type="date" min="${new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)}" aria-label="Fecha de vencimiento" class="exp h-8 px-1.5 text-xs rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white">
+                    </label>`;
+                tr.children[0].appendChild(lotBox);
                 const distBtn = document.createElement('button');
                 distBtn.type = 'button';
                 distBtn.className = 'mt-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 hover:underline';
                 distBtn.textContent = 'Distribuir en almacenes';
                 tr.children[0].appendChild(distBtn);
-                const line = { unit: u, row: tr, qty: tr.querySelector('.qty'), cost: tr.querySelector('.cost'), sub: tr.querySelector('.sub'), hid: tr.querySelector('.hid'), dist: { rows: [] }, distBtn };
+                const line = { unit: u, row: tr, qty: tr.querySelector('.qty'), cost: tr.querySelector('.cost'), sub: tr.querySelector('.sub'), hid: tr.querySelector('.hid'), lot: tr.querySelector('.lot'), exp: tr.querySelector('.exp'), dist: { rows: [] }, distBtn };
                 line.hid.value = u.id;
+                line.lot.value = lot.number ?? '';
+                line.exp.value = lot.expires ?? '';
                 line.qty.value = Math.max(1, Math.round(Number(qty)) || 1);
                 // Cantidad siempre entera: botones − / + y se descartan los decimales al escribir.
                 const step = (d) => { line.qty.value = Math.max(1, (parseInt(line.qty.value, 10) || 0) + d); refresh(); };
@@ -928,7 +943,7 @@
                 const byId = new Map(found.map((u) => [String(u.id), u]));
                 initial.forEach((i) => {
                     const u = byId.get(String(i.id));
-                    if (u) addLine(u, i.quantity, i.cost, i.distribution || []);
+                    if (u) addLine(u, i.quantity, i.cost, i.distribution || [], { number: i.lot_number, expires: i.expires_at });
                 });
             }
             refresh();

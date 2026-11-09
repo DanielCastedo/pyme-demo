@@ -81,7 +81,8 @@
             $columns = [
                 ['key' => 'photo_url', 'label' => 'Foto', 'type' => 'image'],
                 ['key' => 'sku', 'label' => 'SKU'],
-                ['key' => 'name', 'label' => 'Nombre'],
+                // Junto al nombre, el vencimiento más próximo de sus lotes (ver Product::getExpiryBadgeAttribute()).
+                ['key' => 'name', 'label' => 'Nombre', 'badgeKey' => 'expiry_badge'],
                 ['key' => 'marca', 'label' => 'Marca'],
                 ['key' => 'category.name', 'label' => 'Categoría'],
                 ['key' => 'stock_label', 'label' => 'Stock Total'],

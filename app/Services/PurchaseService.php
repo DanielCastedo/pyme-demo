@@ -15,8 +15,8 @@ use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Compras: la mercadería entra al inventario como un lote FIFO con su costo. El pago es al contado (opcional,
- * sale de una caja al momento) o a crédito (el proveedor queda con un saldo, con un anticipo opcional y abonos
+ * Compras: la mercadería entra al inventario como un lote con su costo (y su número de lote y vencimiento, si se
+ * indican). El pago es al contado (opcional, sale de una caja al momento) o a crédito (el proveedor queda con un saldo, con un anticipo opcional y abonos
  * posteriores por App\Services\PurchasePaymentService). Anular la compra hace lo contrario (baja el stock y
  * devuelve todo el dinero pagado).
  *
@@ -197,7 +197,9 @@ class PurchaseService
             $subtotal = Bc::round(Bc::mul($quantity, $cost), 2);
             $total = Bc::add($total, $subtotal);
             $distribution = $this->resolveDistribution($item, $quantity, $principal->id);
-            $lines[] = compact('unit', 'quantity', 'cost', 'subtotal', 'distribution');
+            // Lote del fabricante y vencimiento (opcionales): van al lote que se crea en cada almacén destino.
+            $lot = ['lot_number' => $item['lot_number'] ?? null, 'expires_at' => $item['expires_at'] ?? null];
+            $lines[] = compact('unit', 'quantity', 'cost', 'subtotal', 'distribution', 'lot');
         }
         $total = Bc::round($total, 2);
 
@@ -224,7 +226,7 @@ class PurchaseService
                     'product_unit_id' => $l['unit']->id,
                     'quantity' => $qty,
                     'unit_cost' => Bc::round(Bc::div($l['cost'], Bc::max($l['unit']->factor, '0.0001')), 4),
-                ];
+                ] + $l['lot'];
             }
         }
 

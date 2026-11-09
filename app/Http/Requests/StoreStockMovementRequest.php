@@ -33,6 +33,8 @@ class StoreStockMovementRequest extends FormRequest
             'items.*.product_unit_id' => 'required|exists:product_units,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_cost' => 'nullable|numeric|min:0',
+            'items.*.lot_number' => 'nullable|string|max:50',
+            'items.*.expires_at' => 'nullable|date',
         ];
     }
 

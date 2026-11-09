@@ -36,7 +36,7 @@ class PurchaseSeeder extends Seeder
         ], [
             ['product_unit_id' => $this->unit('CUR-0001')->id, 'quantity' => 40, 'unit_cost' => 1.5],        // 40 gasas    = Bs 60
             ['product_unit_id' => $this->unit('CUR-0002')->id, 'quantity' => 10, 'unit_cost' => 9],          // 10 alcoholes = Bs 90
-            ['product_unit_id' => $this->unit('MED-0001', 'Caja')->id, 'quantity' => 5, 'unit_cost' => 25], // 5 cajas = 500 tabletas = Bs 125
+            ['product_unit_id' => $this->unit('MED-0001', 'Caja')->id, 'quantity' => 5, 'unit_cost' => 25, 'lot_number' => 'PCT-7781', 'expires_at' => now()->addMonths(18)->toDateString()], // 5 cajas = 500 tabletas = Bs 125
         ], $this->admin());
 
         $this->command->info('✅ Compra de ejemplo registrada (Bs 275 pagados desde la caja).');

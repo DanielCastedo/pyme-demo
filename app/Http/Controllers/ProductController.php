@@ -23,7 +23,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $products = QueryBuilder::for(Product::class)
-            ->with('category', 'warehouses', 'components')
+            ->with('category', 'warehouses', 'components', 'nextExpiringBatch')
             ->allowedFilters([
                 AllowedFilter::scope('buscar', 'search'),
 
@@ -108,10 +108,11 @@ class ProductController extends Controller
     {
         $product->load(['category', 'warehouses', 'units' => fn ($q) => $q->with('unit')->orderByDesc('is_base')->orderBy('factor')]);
 
-        // Lotes en el orden en que se gastan (FIFO): primero los que aún tienen stock; de los agotados, solo los últimos.
+        // Lotes en el orden en que se gastan (FEFO: primero lo que vence antes): primero los que aún tienen stock;
+        // de los agotados, solo los últimos.
         $batchRelations = ['warehouse:id,name', 'stockMovementItem.stockMovement.type'];
         $activeBatches = $product->batches()->with($batchRelations)->where('qty_remaining', '>', 0)
-            ->orderBy('received_at')->orderBy('id')->get();
+            ->consumptionOrder()->get();
         $exhaustedBatches = $product->batches()->with($batchRelations)->where('qty_remaining', '<=', 0)
             ->orderByDesc('received_at')->orderByDesc('id')->limit(10)->get();
 

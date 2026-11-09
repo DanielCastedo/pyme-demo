@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -227,17 +228,38 @@ class Product extends Model
     }
 
     /**
-     * Texto de stock para listados: el total, o en un kit "N kits" con lo que alcanza cada parte.
+     * Texto de stock para listados: el total, o en un kit "N kits" (lo que alcanza cada parte se ve en su detalle).
      */
     protected function getStockLabelAttribute(): string
     {
-        $parts = $this->kitBreakdown();
+        return $this->kitBreakdown() === null ? (string) $this->total_stock : $this->total_stock.' kits';
+    }
 
-        if ($parts === null) {
-            return (string) $this->total_stock;
-        }
+    /** Lote con stock que vence antes (el próximo vencimiento del producto), o null si ninguno tiene fecha. */
+    public function nextExpiringBatch(): HasOne
+    {
+        return $this->hasOne(StockBatch::class)->ofMany(
+            ['expires_at' => 'min', 'id' => 'min'],
+            fn ($q) => $q->where('qty_remaining', '>', 0)->whereNotNull('expires_at')
+        );
+    }
 
-        return $this->total_stock.' kits ('.$parts->map(fn ($p) => $p['name'].' '.Bc::int($p['stock']))->implode(' · ').')';
+    /**
+     * Aviso de vencimiento para listados según el lote que vence antes: rojo si ya venció, ámbar si vence dentro de
+     * StockBatch::EXPIRY_WARNING_DAYS días, gris si falta más. Null si ningún lote con stock tiene vencimiento.
+     *
+     * @return array{text: string, tone: string}|null
+     */
+    protected function getExpiryBadgeAttribute(): ?array
+    {
+        $batch = $this->nextExpiringBatch;
+
+        return match (true) {
+            $batch === null => null,
+            $batch->isExpired() => ['text' => 'Vencido', 'tone' => 'red'],
+            $batch->expiresSoon() => ['text' => 'Vence en '.(int) today()->diffInDays($batch->expires_at).' d', 'tone' => 'amber'],
+            default => ['text' => 'Vence '.$batch->expires_at->format('d/m/Y'), 'tone' => 'gray'],
+        };
     }
 
     /**

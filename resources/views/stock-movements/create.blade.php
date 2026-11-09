@@ -58,12 +58,13 @@
                                     <th class="px-3 py-2 text-left w-28">Cantidad</th>
                                     <th class="px-3 py-2 text-left w-44">Costo unitario <span class="normal-case font-normal text-gray-400">(por unidad base)</span></th>
                                     <th class="px-3 py-2 text-left w-44">Costo total</th>
+                                    <th class="px-3 py-2 text-left w-48">Lote / Vence <span class="normal-case font-normal text-gray-400">(entradas)</span></th>
                                     <th class="px-3 py-2 w-10"></th>
                                 </tr>
                             </thead>
                             <tbody id="items-body" class="block md:table-row-group divide-y divide-gray-100 dark:divide-gray-800">
                                 <tr id="items-empty-row" class="block md:table-row">
-                                    <td colspan="5" class="block md:table-cell px-3 py-6 text-center text-xs text-gray-400 dark:text-gray-500 italic">
+                                    <td colspan="6" class="block md:table-cell px-3 py-6 text-center text-xs text-gray-400 dark:text-gray-500 italic">
                                         Todavía no agregaste ningún producto. Buscalo arriba.
                                     </td>
                                 </tr>
@@ -146,7 +147,7 @@
 
                 function refreshCostFields() {
                     const allowed = costAllowed();
-                    tbody.querySelectorAll('.unit-cost-input, .total-cost-input').forEach(input => {
+                    tbody.querySelectorAll('.unit-cost-input, .total-cost-input, .lot-input, .exp-input').forEach(input => {
                         input.disabled = !allowed;
                         if (!allowed) {
                             input.value = '';
@@ -236,6 +237,13 @@
                             ${label('Costo total')}
                             <input type="number" step="0.01" min="0" inputmode="decimal" placeholder="Ej. 300.00" class="total-cost-input ${inputClass}" ${allowed ? '' : 'disabled'} aria-label="Costo total (solo ayuda, no se guarda)">
                             <span class="total-cost-hint block mt-1 text-[10px] text-gray-500 dark:text-gray-400"></span>
+                        </td>
+                        <td class="block md:table-cell md:px-3 md:py-2 mb-3 md:mb-0">
+                            ${label('Lote / Vence (solo entradas)')}
+                            <div class="flex gap-1.5">
+                                <input type="text" maxlength="50" placeholder="N° de lote" name="items[${index}][lot_number]" class="lot-input ${inputClass}" ${allowed ? '' : 'disabled'} aria-label="Número de lote">
+                                <input type="date" name="items[${index}][expires_at]" class="exp-input ${inputClass}" ${allowed ? '' : 'disabled'} aria-label="Fecha de vencimiento">
+                            </div>
                         </td>
                         <td class="block md:table-cell absolute top-2 right-2 md:static md:px-3 md:py-2 md:text-right">
                             <button type="button" class="remove-row text-red-500 hover:text-red-700 p-1" title="Quitar producto" aria-label="Quitar producto">

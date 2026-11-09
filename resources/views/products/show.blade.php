@@ -9,7 +9,10 @@
         ['label' => 'Color', 'value' => $product->color ?? '—'],
         ['label' => 'Medida', 'value' => $product->medida ?? '—'],
         ['label' => 'Estado', 'value' => $product->is_active ? 'Activo' : 'Inactivo'],
-        ['label' => $kitParts ? 'Kits disponibles' : 'Stock Total', 'value' => $product->total_stock],
+        // En un kit: cuántos se pueden armar y, entre paréntesis, el stock de cada parte (en el listado solo va "N kits").
+        ['label' => $kitParts ? 'Kits disponibles' : 'Stock Total', 'value' => $kitParts
+            ? $product->total_stock.' kits ('.$kitParts->map(fn ($p) => $p['name'].' '.\App\Support\Bc::int($p['stock']))->implode(' · ').')'
+            : $product->total_stock],
         ['label' => 'Descripción', 'value' => $product->description ?? '—', 'fullWidth' => true],
     ];
 @endphp
@@ -90,6 +93,8 @@
         $canSeeCost = auth()->user()->can('update', $product);
         $canSeeMovements = auth()->user()->can('ver stock-movements');
         $qty = fn ($n) => \App\Support\Bc::trim($n);
+        // Costo por unidad: 2 decimales, o 4 si los tiene (caja de 30 a Bs 25 = Bs 0.8333 c/u).
+        $unitCost = fn ($n) => number_format((float) $n, round((float) $n, 2) == (float) $n ? 2 : 4);
     @endphp
 
     {{-- Presentaciones: en qué unidades se vende y a cuánto equivale cada una --}}
@@ -155,6 +160,8 @@
                         <thead class="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400">
                             <tr>
                                 <th class="text-left {{ $th }}">#</th>
+                                <th class="text-left {{ $th }}">Lote</th>
+                                <th class="text-left {{ $th }}">Vence</th>
                                 <th class="text-left {{ $th }}">Ingresó</th>
                                 <th class="text-left {{ $th }}">Almacén</th>
                                 <th class="text-left {{ $th }}">Origen</th>
@@ -174,6 +181,19 @@
                                 @endphp
                                 <tr class="{{ $exhausted ? 'text-gray-400 dark:text-gray-500' : ($loop->first ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : '') }}">
                                     <td class="px-3 py-2 font-mono">{{ $batch->id }}</td>
+                                    <td class="px-3 py-2 font-mono">{{ $batch->lot_number ?? '—' }}</td>
+                                    <td class="px-3 py-2 whitespace-nowrap">
+                                        @if ($batch->expires_at)
+                                            {{ $batch->expires_at->format('d/m/Y') }}
+                                            @if (! $exhausted && $batch->isExpired())
+                                                <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400">vencido</span>
+                                            @elseif (! $exhausted && $batch->expiresSoon())
+                                                <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">vence en {{ (int) today()->diffInDays($batch->expires_at) }} días</span>
+                                            @endif
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
                                     <td class="px-3 py-2 whitespace-nowrap">{{ $batch->received_at->format('d/m/Y H:i') }}</td>
                                     <td class="px-3 py-2">{{ $batch->warehouse->name ?? '—' }}</td>
                                     <td class="px-3 py-2">
@@ -193,7 +213,7 @@
                                         {{ $exhausted ? 'Agotado' : $qty($batch->qty_remaining) }}
                                     </td>
                                     @if ($canSeeCost)
-                                        <td class="px-3 py-2 text-right">Bs {{ number_format($batch->unit_cost, 2) }}</td>
+                                        <td class="px-3 py-2 text-right">Bs {{ $unitCost($batch->unit_cost) }}</td>
                                         <td class="px-3 py-2 text-right">Bs {{ number_format((float) $batch->qty_remaining * (float) $batch->unit_cost, 2) }}</td>
                                     @endif
                                 </tr>
@@ -202,7 +222,7 @@
                     </table>
                 </div>
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1.5">
-                    Cantidades en {{ $baseName }}. Las ventas descuentan primero del lote más antiguo de cada almacén (resaltado).
+                    Cantidades en {{ $baseName }}. Las ventas descuentan primero del lote que vence antes en cada almacén (los que no tienen vencimiento, por antigüedad); el primero está resaltado.
                     @if ($exhaustedBatches->isNotEmpty())
                         En gris, los últimos {{ $exhaustedBatches->count() }} lotes ya agotados.
                     @endif

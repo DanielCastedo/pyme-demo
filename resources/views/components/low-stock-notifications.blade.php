@@ -4,14 +4,14 @@
             class="relative flex items-center justify-center w-8 h-8 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600/80 rounded-full"
             :class="{ 'bg-slate-200 dark:bg-slate-600': open }"
             aria-haspopup="true" :aria-expanded="open" @click.prevent="open = !open"
-            title="{{ $total > 0 ? $total.' producto(s) en stock mínimo' : 'Sin alertas de stock' }}">
-            <span class="sr-only">Notificaciones de stock mínimo</span>
+            title="{{ $total + $expiringTotal > 0 ? $total.' en stock mínimo · '.$expiringTotal.' lote(s) por vencer' : 'Sin alertas de stock' }}">
+            <span class="sr-only">Notificaciones de stock mínimo y vencimientos</span>
             <svg class="w-4 h-4 text-slate-500 dark:text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            @if ($total > 0)
+            @if ($total + $expiringTotal > 0)
                 <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none ring-2 ring-white dark:ring-slate-900">
-                    {{ $total > 99 ? '99+' : $total }}
+                    {{ $total + $expiringTotal > 99 ? '99+' : $total + $expiringTotal }}
                 </span>
             @endif
         </button>
@@ -68,6 +68,36 @@
                     class="block px-4 py-3 sm:py-2.5 text-center text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/40">
                     Ver {{ $total > $items->count() ? 'las '.$total : 'todas' }} en Stock por Almacén
                 </a>
+            @endif
+
+            {{-- Lotes vencidos o por vencer: lo que vence antes, primero --}}
+            @if ($expiringTotal > 0)
+                <div class="px-4 py-3 border-t border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Vencimientos</span>
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">{{ $expiringTotal }} lote(s)</span>
+                </div>
+                <div class="max-h-64 overflow-y-auto overscroll-contain">
+                    @foreach ($expiring as $lot)
+                        @php
+                            $expiresAt = \Illuminate\Support\Carbon::parse($lot->expires_at);
+                            $expired = $expiresAt->lt(today());
+                        @endphp
+                        <a href="{{ route('products.show', $lot->product_id) }}"
+                            class="flex items-start gap-3 px-4 py-3 sm:py-2.5 border-b border-slate-100 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                            <span class="mt-1 w-2 h-2 shrink-0 rounded-full {{ $expired ? 'bg-red-500' : 'bg-amber-500' }}"></span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{{ $lot->product }}</span>
+                                <span class="block text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ $lot->lot_number ? 'Lote '.$lot->lot_number.' · ' : '' }}{{ $lot->warehouse }} · quedan {{ (int) $lot->qty_remaining }}</span>
+                            </span>
+                            <span class="text-right shrink-0">
+                                <span class="block text-xs font-bold {{ $expired ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400' }}">
+                                    {{ $expired ? 'Vencido' : 'Vence en '.(int) today()->diffInDays($expiresAt).' d' }}
+                                </span>
+                                <span class="block text-[10px] text-slate-400">{{ $expiresAt->format('d/m/Y') }}</span>
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
             @endif
         </div>
     </div>

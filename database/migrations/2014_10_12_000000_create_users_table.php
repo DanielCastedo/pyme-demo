@@ -25,9 +25,15 @@ return new class extends Migration
             }
             $table->foreignId('branche_id')->constrained('branches')->onDelete('cascade');
             $table->rememberToken();
+            // Términos y condiciones: quién es el administrador designado y cuándo/desde dónde aceptó qué versión.
+            $table->boolean('is_designated_admin')->default(false);
+            $table->timestamp('terms_accepted_at')->nullable();
+            $table->string('terms_ip', 45)->nullable();
+            $table->string('terms_version', 20)->default('1.0');
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

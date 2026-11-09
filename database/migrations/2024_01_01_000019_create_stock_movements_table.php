@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignId('warehouse_id')->constrained('warehouses')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('order_id')->nullable()->constrained('orders')->nullOnDelete();
+            // Despacho o devolución de una consignación (puede tener varios movimientos, uno por almacén).
+            $table->foreignId('consignment_id')->nullable()->constrained('consignments')->nullOnDelete();
             $table->timestamps();
         });
     }

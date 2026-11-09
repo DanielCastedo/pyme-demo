@@ -20,7 +20,17 @@ return new class extends Migration
             $table->foreignId('warehouse_id')->constrained('warehouses')->restrictOnDelete();
             $table->foreignId('stock_movement_id')->nullable()->constrained('stock_movements')->nullOnDelete();
             $table->timestamps();
-            $table->unique(['purchase_id', 'warehouse_id']);
+            // Sin índice único compra + almacén: al agregar productos a una compra ya registrada, cada ampliación entra
+            // con su propia entrada de stock, así que un almacén puede recibir varias veces de la misma compra.
+        });
+
+        // Cada ampliación de una compra pagada desde caja genera su propia transacción; aquí se enlazan a la compra
+        // (purchases.transaction_id sigue guardando el pago original).
+        Schema::create('purchase_transactions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('purchase_id')->constrained('purchases')->cascadeOnDelete();
+            $table->foreignId('transaction_id')->constrained('transactions')->restrictOnDelete();
+            $table->timestamps();
         });
 
         Schema::create('purchase_item_distributions', function (Blueprint $table) {
@@ -35,6 +45,7 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::dropIfExists('purchase_transactions');
         Schema::dropIfExists('purchase_item_distributions');
         Schema::dropIfExists('purchase_receipts');
     }

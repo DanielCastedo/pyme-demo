@@ -38,6 +38,8 @@ class StorePurchaseRequest extends FormRequest
             'items.*.product_unit_id' => 'required|distinct|exists:product_units,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
+            'items.*.lot_number' => 'nullable|string|max:50',
+            'items.*.expires_at' => 'nullable|date|after_or_equal:today',
             // Reparto opcional del producto entre almacenes; si viene, tiene que sumar exactamente la cantidad comprada.
             'items.*.distribution' => 'nullable|array',
             'items.*.distribution.*.warehouse_id' => 'required|exists:warehouses,id',
@@ -95,6 +97,9 @@ class StorePurchaseRequest extends FormRequest
             'items.*.quantity.min' => 'La cantidad mínima es 1.',
             'items.*.unit_cost.required' => 'Indica el costo de cada producto.',
             'items.*.unit_cost.min' => 'El costo no puede ser negativo.',
+            'items.*.lot_number.max' => 'El número de lote no debe superar los 50 caracteres.',
+            'items.*.expires_at.date' => 'La fecha de vencimiento no es válida.',
+            'items.*.expires_at.after_or_equal' => 'No se puede comprar un lote ya vencido: revisa la fecha de vencimiento.',
             'items.*.distribution.*.warehouse_id.required' => 'Elige el almacén de cada parte del reparto.',
             'items.*.distribution.*.warehouse_id.exists' => 'Un almacén del reparto no existe.',
             'items.*.distribution.*.quantity.integer' => 'Las cantidades del reparto deben ser enteras.',

@@ -79,7 +79,9 @@ class StockMovementService
                         $baseQuantity,
                         $unitCost ?? 0,
                         $item->id,
-                        $movement->date
+                        $movement->date,
+                        $itemData['lot_number'] ?? null,
+                        $itemData['expires_at'] ?? null
                     );
                 } elseif ($type->sign === '-') {
                     $totalCost = ProductWarehouse::removeStock(

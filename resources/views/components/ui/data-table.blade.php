@@ -56,6 +56,8 @@
         'violet'  => 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:border-violet-800/50',
         'amber'   => 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50',
         'rose'    => 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800/50',
+        'red'     => 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800/50',
+        'gray'    => 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-slate-800 dark:text-gray-400 dark:border-slate-700',
     ];
 
     $renderCell = function ($col, $row) use ($badgeColors, $iconPresets) {
@@ -103,7 +105,16 @@
             ];
         }
 
-        return ['type' => 'text', 'value' => $value];
+        // Etiqueta opcional junto al texto: ['key' => 'name', 'badgeKey' => 'expiry_badge'], donde el atributo
+        // devuelve ['text' => 'Vence en 20 d', 'tone' => 'amber'] (un color de $badgeColors) o null para no mostrarla.
+        $badge = isset($col['badgeKey']) ? data_get($row, $col['badgeKey']) : null;
+        if (is_array($badge) && ! empty($badge['text'])) {
+            $badge['class'] = $badgeColors[$badge['tone'] ?? 'gray'] ?? $badgeColors['gray'];
+        } else {
+            $badge = null;
+        }
+
+        return ['type' => 'text', 'value' => $value, 'badge' => $badge];
     };
 
     // Cache de nombres de permisos en memoria durante la petición
@@ -278,6 +289,9 @@
 
                                 @else
                                     {{ $cell['value'] }}
+                                    @if ($cell['badge'] ?? null)
+                                        <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold whitespace-nowrap {{ $cell['badge']['class'] }}">{{ $cell['badge']['text'] }}</span>
+                                    @endif
                                 @endif
 
                             </td>
@@ -389,7 +403,12 @@
                             </div>
 
                         @else
-                            <span class="text-xs text-gray-800 dark:text-gray-200 text-right">{{ $cell['value'] }}</span>
+                            <span class="text-xs text-gray-800 dark:text-gray-200 text-right">
+                                {{ $cell['value'] }}
+                                @if ($cell['badge'] ?? null)
+                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold whitespace-nowrap {{ $cell['badge']['class'] }}">{{ $cell['badge']['text'] }}</span>
+                                @endif
+                            </span>
                         @endif
                     </div>
                 @endforeach

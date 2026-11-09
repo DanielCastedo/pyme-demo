@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
 /**
  * Tres ventas, una por cada caso que conviene ver:
  *  1) Un KIT al contado: se descuentan sus partes (4 gasas, 1 alcohol, 8 tabletas de paracetamol).
- *  2) Contado con descuento (Bs 5 sobre la línea): el costo sale del lote más antiguo de ambroxol (Bs 22 c/u).
+ *  2) Contado con descuento (Bs 5 sobre la línea): el costo sale del lote de ambroxol que vence antes (Bs 25 c/u).
  *  3) A crédito con anticipo: la clínica deja Bs 50 y queda debiendo el resto (aparece en Cuentas por cobrar).
  */
 class OrderSeeder extends Seeder

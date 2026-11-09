@@ -22,6 +22,8 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->foreignId('product_unit_id')->constrained('product_units')->onDelete('cascade');
+            // Almacén del que sale ESTA línea (una venta o pedido puede sacar cada producto de un almacén distinto).
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             $table->timestamps();
         });
     }

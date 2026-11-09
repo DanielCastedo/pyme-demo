@@ -3,6 +3,7 @@
 namespace App\View\Components;
 
 use App\Models\ProductWarehouse;
+use App\Models\StockBatch;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +12,8 @@ use Illuminate\View\View;
 
 /**
  * Campana de notificaciones del encabezado: avisa de los productos que llegaron a su stock mínimo (o lo pasaron)
- * en algún almacén. Solo la ven quienes pueden consultar el stock por almacén.
+ * en algún almacén, y de los lotes con stock vencidos o por vencer (ver StockBatch::EXPIRY_WARNING_DAYS).
+ * Solo la ven quienes pueden consultar el stock por almacén.
  *
  * Un producto entra en la alerta cuando su stock es menor o igual al mínimo configurado y ese mínimo es mayor a 0
  * (con mínimo 0 se entiende que no se controla). El resultado se guarda 1 minuto para no consultar en cada pantalla.
@@ -27,11 +29,18 @@ class LowStockNotifications extends Component
     /** @var Collection<int, object> */
     public Collection $items;
 
+    /** Lotes con stock ya vencidos o que vencen dentro de StockBatch::EXPIRY_WARNING_DAYS días. */
+    public int $expiringTotal = 0;
+
+    /** @var Collection<int, object> */
+    public Collection $expiring;
+
     public function __construct()
     {
         $user = auth()->user();
         $this->visible = $user !== null && $user->can('viewAny', ProductWarehouse::class);
         $this->items = collect();
+        $this->expiring = collect();
 
         if (! $this->visible) {
             return;
@@ -39,8 +48,11 @@ class LowStockNotifications extends Component
 
         // La campana nunca debe tumbar una pantalla: si la consulta falla, simplemente no se muestra.
         try {
-            ['total' => $this->total, 'items' => $items] = Cache::remember('low-stock-alerts', 60, fn () => $this->load());
-            $this->items = collect($items);
+            $alerts = Cache::remember('low-stock-alerts', 60, fn () => $this->load());
+            $this->total = $alerts['total'];
+            $this->items = collect($alerts['items']);
+            $this->expiringTotal = $alerts['expiringTotal'] ?? 0;
+            $this->expiring = collect($alerts['expiring'] ?? []);
         } catch (\Throwable $e) {
             report($e);
             $this->visible = false;
@@ -60,11 +72,23 @@ class LowStockNotifications extends Component
             ->where('pw.min_stock', '>', 0)
             ->whereColumn('pw.stock', '<=', 'pw.min_stock');
 
+        // Lotes que todavía tienen stock y ya vencieron o vencen pronto (lo que vence antes, primero).
+        $expiring = StockBatch::expiringSoon()
+            ->join('products as p', 'p.id', '=', 'stock_batches.product_id')
+            ->join('warehouses as w', 'w.id', '=', 'stock_batches.warehouse_id')
+            ->where('p.is_active', true)
+            ->where('w.is_active', true);
+
         return [
             'total' => (clone $query)->count(),
             // Lo más urgente primero: sin stock, y luego el que más por debajo del mínimo está
             'items' => $query->orderByRaw('(CAST(pw.stock AS SIGNED) - CAST(pw.min_stock AS SIGNED)) asc')->orderBy('p.name')->limit(self::LIMIT)
                 ->get(['pw.product_id', 'pw.warehouse_id', 'pw.stock', 'pw.min_stock', 'p.name as product', 'w.name as warehouse'])
+                ->all(),
+            'expiringTotal' => (clone $expiring)->count(),
+            'expiring' => $expiring->orderBy('stock_batches.expires_at')->orderBy('p.name')->limit(self::LIMIT)
+                ->toBase()
+                ->get(['stock_batches.product_id', 'stock_batches.lot_number', 'stock_batches.expires_at', 'stock_batches.qty_remaining', 'p.name as product', 'w.name as warehouse'])
                 ->all(),
         ];
     }

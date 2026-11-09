@@ -52,15 +52,15 @@ class ProductWarehouse extends Pivot
     }
 
     /**
-     * Lotes con stock disponible de este producto en este almacén, en orden FIFO.
+     * Lotes con stock disponible de este producto en este almacén, en el orden en que se gastan
+     * (FEFO, ver StockBatch::scopeConsumptionOrder()).
      */
     public function availableBatches()
     {
         return StockBatch::where('product_id', $this->product_id)
             ->where('warehouse_id', $this->warehouse_id)
             ->where('qty_remaining', '>', 0)
-            ->orderBy('received_at')
-            ->orderBy('id')
+            ->consumptionOrder()
             ->get();
     }
 
@@ -84,9 +84,11 @@ class ProductWarehouse extends Pivot
         int|float|string $quantity,
         int|float|string $unitCost,
         ?int $itemId = null,
-        $receivedAt = null
+        $receivedAt = null,
+        ?string $lotNumber = null,
+        $expiresAt = null
     ): StockBatch {
-        return DB::transaction(function () use ($productId, $warehouseId, $quantity, $unitCost, $itemId, $receivedAt) {
+        return DB::transaction(function () use ($productId, $warehouseId, $quantity, $unitCost, $itemId, $receivedAt, $lotNumber, $expiresAt) {
             self::lockOrCreateRow($productId, $warehouseId);
 
             $timestamp = $receivedAt ? \Carbon\Carbon::parse($receivedAt) : now();
@@ -98,6 +100,8 @@ class ProductWarehouse extends Pivot
                 'product_id' => $productId,
                 'warehouse_id' => $warehouseId,
                 'stock_movement_item_id' => $itemId,
+                'lot_number' => filled($lotNumber) ? trim($lotNumber) : null,
+                'expires_at' => $expiresAt ?: null,
                 'received_at' => $timestamp,
                 'unit_cost' => $unitCost,
                 'qty_initial' => $quantity,
@@ -111,7 +115,7 @@ class ProductWarehouse extends Pivot
     }
 
     /**
-     * Salida de stock por FIFO: consume primero el lote más antiguo, luego el siguiente.
+     * Salida de stock por FEFO: consume primero el lote que vence antes (los sin vencimiento, por antigüedad: FIFO).
      * Registra qué lotes (y a qué costo) se consumieron para poder revertir exacto.
      * Devuelve el costo total de lo consumido. Lanza excepción si no alcanza el stock.
      */
@@ -123,8 +127,7 @@ class ProductWarehouse extends Pivot
             $batches = StockBatch::where('product_id', $productId)
                 ->where('warehouse_id', $warehouseId)
                 ->where('qty_remaining', '>', 0)
-                ->orderBy('received_at')
-                ->orderBy('id')
+                ->consumptionOrder()
                 ->lockForUpdate()
                 ->get();
 
