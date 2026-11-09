@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('stock_batch_id')->constrained('stock_batches')->onDelete('cascade');
             $table->foreignId('stock_movement_item_id')->nullable()->constrained('stock_movement_items')->onDelete('cascade');
             $table->decimal('quantity', 12, 2);
-            $table->decimal('unit_cost', 12, 4); // el mismo costo por unidad del lote consumido
+            $table->decimal('unit_cost', 10, 2); // el mismo costo por unidad del lote consumido
             $table->timestamps();
         });
     }

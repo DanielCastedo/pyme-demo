@@ -225,7 +225,7 @@ class PurchaseService
                 $byWarehouse[$warehouseId][] = [
                     'product_unit_id' => $l['unit']->id,
                     'quantity' => $qty,
-                    'unit_cost' => Bc::round(Bc::div($l['cost'], Bc::max($l['unit']->factor, '0.0001')), 4),
+                    'unit_cost' => Bc::round(Bc::div($l['cost'], Bc::max($l['unit']->factor, '0.0001')), 2),
                 ] + $l['lot'];
             }
         }

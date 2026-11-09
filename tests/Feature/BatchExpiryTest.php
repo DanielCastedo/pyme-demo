@@ -36,7 +36,7 @@ function enterLot(int $warehouseId, int $unitId, int $qty, float $cost, ?string 
     ]);
 }
 
-it('al comprar por caja guarda el lote, el vencimiento y el costo por unidad con 4 decimales', function () {
+it('al comprar por caja guarda el lote, el vencimiento y el costo por unidad con 2 decimales', function () {
     $this->actingAs($this->user)->post(route('purchases.store'), [
         'warehouse_id' => $this->warehouse->id,
         'date' => now()->toDateString(),
@@ -51,7 +51,7 @@ it('al comprar por caja guarda el lote, el vencimiento y el costo por unidad con
     expect($batch->lot_number)->toBe('AMB-2405')
         ->and($batch->expires_at->toDateString())->toBe(now()->addMonths(6)->toDateString())
         ->and((float) $batch->qty_initial)->toBe(60.0) // 2 cajas × 30
-        ->and((float) $batch->unit_cost)->toBe(0.8333); // Bs 25 / 30 (antes se guardaba 0.83)
+        ->and((float) $batch->unit_cost)->toBe(0.83); // Bs 25 / 30 = 0.8333, redondeado a 2 decimales
 });
 
 it('no deja comprar un lote ya vencido', function () {
@@ -87,12 +87,17 @@ it('avisa en la campana de los lotes por vencer y vencidos (no de los lejanos)',
     enterLot($this->warehouse->id, $this->base->id, 5, 25, 'LEJOS', now()->addYear()->toDateString());
     StockBatch::where('lot_number', 'PRONTO')->first()->replicate()->fill(['lot_number' => 'VENCIDO', 'expires_at' => now()->subDays(3)->toDateString()])->save();
 
-    $this->actingAs(userWith('ver product-warehouses'));
+    $this->actingAs(userWith('ver product-warehouses', 'ver products'));
     \Illuminate\Support\Facades\Cache::forget('low-stock-alerts');
     $bell = new LowStockNotifications();
 
     expect($bell->expiringTotal)->toBe(2)
         ->and($bell->expiring->pluck('lot_number')->all())->toBe(['VENCIDO', 'PRONTO']);
+
+    // La campana se dibuja en el encabezado de cualquier pantalla.
+    $this->get(route('products.index'))
+        ->assertOk()
+        ->assertSeeInOrder(['Vencimientos', 'Lote VENCIDO', 'quedan 5', 'Vencido', 'Lote PRONTO', 'Vence en 10 d']);
 });
 
 it('en el listado de productos marca el vencimiento más próximo junto al nombre', function () {

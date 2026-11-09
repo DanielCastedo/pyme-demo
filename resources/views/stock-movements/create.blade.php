@@ -240,7 +240,8 @@
                         </td>
                         <td class="block md:table-cell md:px-3 md:py-2 mb-3 md:mb-0">
                             ${label('Lote / Vence (solo entradas)')}
-                            <div class="flex gap-1.5">
+                            {{-- Uno debajo del otro: lado a lado el campo de fecha dejaba el del lote demasiado angosto --}}
+                            <div class="flex flex-col gap-1.5">
                                 <input type="text" maxlength="50" placeholder="N° de lote" name="items[${index}][lot_number]" class="lot-input ${inputClass}" ${allowed ? '' : 'disabled'} aria-label="Número de lote">
                                 <input type="date" name="items[${index}][expires_at]" class="exp-input ${inputClass}" ${allowed ? '' : 'disabled'} aria-label="Fecha de vencimiento">
                             </div>

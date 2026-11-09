@@ -16,9 +16,7 @@ return new class extends Migration
             $table->string('lot_number', 50)->nullable(); // lote del fabricante
             $table->date('expires_at')->nullable(); // la salida gasta primero lo que vence antes (FEFO)
             $table->dateTime('received_at');
-            // 4 decimales: al comprar por caja y vender por unidad, el costo por unidad suele tener más de 2
-            // (caja de 30 a Bs 25 = Bs 0.8333 c/u).
-            $table->decimal('unit_cost', 12, 4)->default(0);
+            $table->decimal('unit_cost', 10, 2)->default(0); // por unidad base, con 2 decimales como todo el dinero
             $table->decimal('qty_initial', 12, 2);
             $table->decimal('qty_remaining', 12, 2);
             $table->timestamps();

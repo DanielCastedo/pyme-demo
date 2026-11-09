@@ -87,7 +87,7 @@
                             <span class="mt-1 w-2 h-2 shrink-0 rounded-full {{ $expired ? 'bg-red-500' : 'bg-amber-500' }}"></span>
                             <span class="min-w-0 flex-1">
                                 <span class="block text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{{ $lot->product }}</span>
-                                <span class="block text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ $lot->lot_number ? 'Lote '.$lot->lot_number.' · ' : '' }}{{ $lot->warehouse }} · quedan {{ (int) $lot->qty_remaining }}</span>
+                                <span class="block text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ $lot->lot_number ? 'Lote '.$lot->lot_number.' · ' : '' }}{{ $lot->warehouse }} · quedan {{ \App\Support\Bc::trim($lot->qty_remaining) }}</span>
                             </span>
                             <span class="text-right shrink-0">
                                 <span class="block text-xs font-bold {{ $expired ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400' }}">

@@ -93,8 +93,7 @@
         $canSeeCost = auth()->user()->can('update', $product);
         $canSeeMovements = auth()->user()->can('ver stock-movements');
         $qty = fn ($n) => \App\Support\Bc::trim($n);
-        // Costo por unidad: 2 decimales, o 4 si los tiene (caja de 30 a Bs 25 = Bs 0.8333 c/u).
-        $unitCost = fn ($n) => number_format((float) $n, round((float) $n, 2) == (float) $n ? 2 : 4);
+        $bs = fn ($n) => number_format((float) \App\Support\Bc::round($n, 2), 2);
     @endphp
 
     {{-- Presentaciones: en qué unidades se vende y a cuánto equivale cada una --}}
@@ -130,10 +129,10 @@
                                 </td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ $unit->unit->name ?? '—' }}</td>
                                 <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-300">{{ $unit->factor }} {{ $baseName }}</td>
-                                <td class="px-3 py-2 text-right font-semibold text-gray-900 dark:text-white">Bs {{ number_format($unit->price, 2) }}</td>
+                                <td class="px-3 py-2 text-right font-semibold text-gray-900 dark:text-white">Bs {{ $bs($unit->price) }}</td>
                                 <td class="px-3 py-2 font-mono text-gray-600 dark:text-gray-300">{{ $unit->barcode ?? '—' }}</td>
                                 @unless ($kitParts)
-                                    <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-300">{{ intdiv((int) $product->total_stock, max(1, $unit->factor)) }}</td>
+                                    <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-300">{{ \App\Support\Bc::int(\App\Support\Bc::floor(\App\Support\Bc::div($product->total_stock, max(1, $unit->factor)))) }}</td>
                                 @endunless
                             </tr>
                         @endforeach
@@ -213,8 +212,8 @@
                                         {{ $exhausted ? 'Agotado' : $qty($batch->qty_remaining) }}
                                     </td>
                                     @if ($canSeeCost)
-                                        <td class="px-3 py-2 text-right">Bs {{ $unitCost($batch->unit_cost) }}</td>
-                                        <td class="px-3 py-2 text-right">Bs {{ number_format((float) $batch->qty_remaining * (float) $batch->unit_cost, 2) }}</td>
+                                        <td class="px-3 py-2 text-right">Bs {{ $bs($batch->unit_cost) }}</td>
+                                        <td class="px-3 py-2 text-right">Bs {{ $bs(\App\Support\Bc::mul($batch->qty_remaining, $batch->unit_cost)) }}</td>
                                     @endif
                                 </tr>
                             @endforeach

@@ -23,7 +23,7 @@ class StockBatch extends Model
     protected $casts = [
         'received_at' => 'datetime',
         'expires_at' => 'date',
-        'unit_cost' => 'decimal:4',
+        'unit_cost' => 'decimal:2',
         'qty_initial' => 'decimal:2',
         'qty_remaining' => 'decimal:2',
     ];
